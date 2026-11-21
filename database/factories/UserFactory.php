@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\SystemRole;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -28,7 +29,9 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'password' => static::$password ??= Hash::make('Password@12345'),
+            'system_role' => SystemRole::USER,
+            'suspended_at' => null,
             'remember_token' => Str::random(10),
         ];
     }
@@ -40,6 +43,36 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is an admin.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'system_role' => SystemRole::ADMIN,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is suspended.
+     */
+    public function suspended(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'suspended_at' => now(),
+        ]);
+    }
+
+    /**
+     * Indicate that the user does not have a local password (Google-only account).
+     */
+    public function withoutPassword(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'password' => null,
         ]);
     }
 }
