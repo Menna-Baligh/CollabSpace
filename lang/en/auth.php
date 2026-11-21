@@ -22,4 +22,3 @@ return [
     'oauth_linked_successfully' => 'Google account linked successfully.',
     'invalid_exchange_code' => 'The exchange code is invalid or has expired.',
 ];
-

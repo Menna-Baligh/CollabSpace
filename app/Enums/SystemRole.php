@@ -7,4 +7,3 @@ enum SystemRole: string
     case USER = 'user';
     case ADMIN = 'admin';
 }
-

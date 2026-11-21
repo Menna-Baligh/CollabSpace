@@ -18,17 +18,11 @@ class RegisterController extends Controller
     {
         $result = $authService->register($request->validated());
 
-        return response()->json([
-            'data' => [
-                'user' => new UserResource($result['user']),
-                'token' => $result['token'],
-                'token_type' => $result['token_type'],
-                'expires_in' => $result['expires_in'],
-            ],
-            'meta' => [
-                'message' => __('auth.registered_successfully'),
-            ],
-        ], Response::HTTP_CREATED);
+        return $this->successResponse([
+            'user' => new UserResource($result['user']),
+            'token' => $result['token'],
+            'token_type' => $result['token_type'],
+            'expires_in' => $result['expires_in'],
+        ], __('auth.registered_successfully'), status: Response::HTTP_CREATED);
     }
 }
-

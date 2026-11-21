@@ -72,6 +72,7 @@ class AuthService
 
         $token = $user->createToken('auth_token', ['*'], $expiresAt)->plainTextToken;
         $user->loadMissing('oauthIdentities');
+
         return [
             'user' => $user,
             'token' => $token,
@@ -88,4 +89,3 @@ class AuthService
         $user->currentAccessToken()?->delete();
     }
 }
-

@@ -22,4 +22,3 @@ return [
     'oauth_linked_successfully' => 'تم ربط حساب Google بنجاح.',
     'invalid_exchange_code' => 'رمز التبادل غير صالح أو انتهت صلاحيته.',
 ];
-

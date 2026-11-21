@@ -23,4 +23,3 @@ return [
         'remember' => 'remember me',
     ],
 ];
-
