@@ -2,9 +2,9 @@ name: CollabSpace CI
 
 on:
   push:
-    branches: [main, develop, 'feature/**']
+    branches: [master, main, develop, 'feature/**']
   pull_request:
-    branches: [main, develop]
+    branches: [master, main, develop]
 
 jobs:
   tests-and-lint:
