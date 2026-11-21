@@ -4,7 +4,6 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
-// Create an anonymous class or dummy class using the trait
 $testClass = new class
 {
     use ApiResponse;
@@ -80,4 +79,3 @@ test('errorResponse alias works identically to failureResponse', function () use
     expect($data['error']['code'])->toBe('validation_failed')
         ->and($data['error']['message'])->toBe('Unprocessable entity.');
 });
-

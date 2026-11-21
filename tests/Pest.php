@@ -1,14 +1,13 @@
 <?php
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
 uses(
-    Tests\TestCase::class,
-    Illuminate\Foundation\Testing\RefreshDatabase::class,
+    TestCase::class,
+    RefreshDatabase::class,
 )->in('Feature');
 
 uses(
     TestCase::class,
-)->in('Unit');
-
-uses(
-    Tests\TestCase::class,
 )->in('Unit');
