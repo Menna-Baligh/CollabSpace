@@ -1,0 +1,707 @@
+{
+	"info": {
+		"_postman_id": "c1f7481b-a45e-4c74-9f86-21a4f32c3f1a",
+		"name": "CollabSpace - Authentication API",
+		"description": "Production-grade Authentication API collection for CollabSpace REST API under /api/v1/auth.\n\nIncludes Email/Password registration & login, Remember Me (24h vs 30d tokens), Logout, User Profile (/me), Google OAuth Sign-in & Sign-up, Google Account Linking, and Password Reset.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "01. Registration & Login",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"SecurePass#2026\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new user account. Automatically authenticates the user and returns an immediate 24-hour Sanctum Bearer token. Public registration always creates accounts with role 'user'."
+					},
+					"response": [
+						{
+							"name": "201 Created",
+							"status": "Created",
+							"code": 201,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"data\": {\n        \"user\": {\n            \"id\": 1,\n            \"name\": \"John Doe\",\n            \"email\": \"john.doe@example.com\",\n            \"email_verified\": false,\n            \"system_role\": \"user\",\n            \"is_suspended\": false,\n            \"is_google_linked\": false,\n            \"has_password\": true,\n            \"created_at\": \"2026-11-21T21:00:00.000000Z\",\n            \"updated_at\": \"2026-11-21T21:00:00.000000Z\"\n        },\n        \"token\": \"1|exampleSanctumTokenValueGoesHere\",\n        \"token_type\": \"Bearer\",\n        \"expires_in\": 86400\n    },\n    \"meta\": {\n        \"message\": \"Registration successful.\"\n    }\n}"
+						},
+						{
+							"name": "422 Validation Error",
+							"status": "Unprocessable Content",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"error\": {\n        \"code\": \"validation_failed\",\n        \"message\": \"The email has already been taken.\",\n        \"details\": {\n            \"email\": [\n                \"The email has already been taken.\"\n            ]\n        }\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Login (Remember Me = false, 24 Hours)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"SecurePass#2026\",\n    \"remember\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Authenticate user with email and password. When remember=false, returns a Personal Access Token with a lifetime of 24 hours (86,400s)."
+					},
+					"response": [
+						{
+							"name": "200 Success",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"data\": {\n        \"user\": {\n            \"id\": 1,\n            \"name\": \"John Doe\",\n            \"email\": \"john.doe@example.com\",\n            \"email_verified\": false,\n            \"system_role\": \"user\",\n            \"is_suspended\": false,\n            \"is_google_linked\": false,\n            \"has_password\": true,\n            \"created_at\": \"2026-11-21T21:00:00.000000Z\",\n            \"updated_at\": \"2026-11-21T21:00:00.000000Z\"\n        },\n        \"token\": \"2|sanctumPersonalAccessToken24h\",\n        \"token_type\": \"Bearer\",\n        \"expires_in\": 86400\n    },\n    \"meta\": {\n        \"message\": \"Logged in successfully.\"\n    }\n}"
+						},
+						{
+							"name": "401 Invalid Credentials",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"error\": {\n        \"code\": \"invalid_credentials\",\n        \"message\": \"These credentials do not match our records.\",\n        \"details\": {}\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Login (Remember Me = true, 30 Days)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"SecurePass#2026\",\n    \"remember\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Authenticate user with email, password, and remember=true. Issues a Personal Access Token with a lifetime of 30 days (2,592,000s)."
+					},
+					"response": [
+						{
+							"name": "200 Success",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"data\": {\n        \"user\": {\n            \"id\": 1,\n            \"name\": \"John Doe\",\n            \"email\": \"john.doe@example.com\",\n            \"email_verified\": false,\n            \"system_role\": \"user\",\n            \"is_suspended\": false,\n            \"is_google_linked\": false,\n            \"has_password\": true,\n            \"created_at\": \"2026-11-21T21:00:00.000000Z\",\n            \"updated_at\": \"2026-11-21T21:00:00.000000Z\"\n        },\n        \"token\": \"3|sanctumPersonalAccessToken30Days\",\n        \"token_type\": \"Bearer\",\n        \"expires_in\": 2592000\n    },\n    \"meta\": {\n        \"message\": \"Logged in successfully.\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Revokes only the current Personal Access Token used in Authorization header. Other device sessions remain active."
+					},
+					"response": [
+						{
+							"name": "200 Success",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"data\": null,\n    \"meta\": {\n        \"message\": \"Logged out successfully.\"\n    }\n}"
+						},
+						{
+							"name": "401 Unauthenticated",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"error\": {\n        \"code\": \"unauthenticated\",\n        \"message\": \"Unauthenticated.\",\n        \"details\": {}\n    }\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "02. Profile",
+			"item": [
+				{
+					"name": "Get Authenticated User (/me)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"me"
+							]
+						},
+						"description": "Returns safe account data for the currently authenticated user. Requires valid Bearer Token and non-suspended account status."
+					},
+					"response": [
+						{
+							"name": "200 Success",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"data\": {\n        \"id\": 1,\n        \"name\": \"John Doe\",\n        \"email\": \"john.doe@example.com\",\n        \"email_verified\": true,\n        \"system_role\": \"user\",\n        \"is_suspended\": false,\n        \"is_google_linked\": true,\n        \"has_password\": true,\n        \"created_at\": \"2026-11-21T21:00:00.000000Z\",\n        \"updated_at\": \"2026-11-21T21:00:00.000000Z\"\n    },\n    \"meta\": {}\n}"
+						},
+						{
+							"name": "403 Account Suspended",
+							"status": "Forbidden",
+							"code": 403,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"error\": {\n        \"code\": \"account_suspended\",\n        \"message\": \"Your account has been suspended.\",\n        \"details\": {}\n    }\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "03. Google OAuth Flow",
+			"item": [
+				{
+					"name": "1. Google Redirect",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/google/redirect",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"google",
+								"redirect"
+							]
+						},
+						"description": "Initiates Google OAuth. Generates a secure random state with a 5-minute cache TTL and redirects the browser to accounts.google.com consent screen."
+					},
+					"response": [
+						{
+							"name": "302 Redirect to Google",
+							"status": "Found",
+							"code": 302,
+							"header": [
+								{
+									"key": "Location",
+									"value": "https://accounts.google.com/o/oauth2/auth?client_id=...&state=randomCryptographicState..."
+								}
+							],
+							"body": ""
+						}
+					]
+				},
+				{
+					"name": "2. Google Callback (Browser Redirect)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/google/callback?state=xyz&code=4/0Abc...",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"google",
+								"callback"
+							],
+							"query": [
+								{
+									"key": "state",
+									"value": "xyz"
+								},
+								{
+									"key": "code",
+									"value": "4/0Abc..."
+								}
+							]
+						},
+						"description": "Google OAuth redirects the browser back to this backend callback endpoint.\n\nBackend validates state atomically, retrieves verified Google profile, creates account or loads existing Google user, generates a 64-char one-time exchange code, and redirects browser to FRONTEND_AUTH_CALLBACK_URL with `#code={exchange_code}`."
+					},
+					"response": [
+						{
+							"name": "302 Redirect to Frontend with Fragment",
+							"status": "Found",
+							"code": 302,
+							"header": [
+								{
+									"key": "Location",
+									"value": "http://localhost:3000/auth/callback#code=c6a8f107b...64charRandomHex"
+								}
+							],
+							"body": ""
+						}
+					]
+				},
+				{
+					"name": "3. Exchange One-Time Code",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"paste_exchange_code_from_url_fragment_here\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/google/exchange",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"google",
+								"exchange"
+							]
+						},
+						"description": "Frontend extracts the `#code` from URL fragment and sends it via POST to exchange it atomically for a 24-hour Sanctum Bearer token. Replaying or reusing codes is strictly rejected."
+					},
+					"response": [
+						{
+							"name": "200 Success",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"data\": {\n        \"user\": {\n            \"id\": 2,\n            \"name\": \"Google User\",\n            \"email\": \"user@gmail.com\",\n            \"email_verified\": true,\n            \"system_role\": \"user\",\n            \"is_suspended\": false,\n            \"is_google_linked\": true,\n            \"has_password\": false,\n            \"created_at\": \"2026-11-21T21:00:00.000000Z\",\n            \"updated_at\": \"2026-11-21T21:00:00.000000Z\"\n        },\n        \"token\": \"4|sanctumPersonalAccessToken24h\",\n        \"token_type\": \"Bearer\",\n        \"expires_in\": 86400\n    },\n    \"meta\": {\n        \"message\": \"Logged in successfully.\"\n    }\n}"
+						},
+						{
+							"name": "401 Invalid or Replayed Code",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"error\": {\n        \"code\": \"invalid_exchange_code\",\n        \"message\": \"The exchange code is invalid or has expired.\",\n        \"details\": {}\n    }\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "04. Google Account Linking",
+			"item": [
+				{
+					"name": "1. Start Google Linking (Authenticated)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/google/link/redirect",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"google",
+								"link",
+								"redirect"
+							]
+						},
+						"description": "Authenticated user initiates Google account linking. Backend binds the authenticated user ID into a secure state stored in cache (5-min TTL) and redirects to Google."
+					},
+					"response": [
+						{
+							"name": "302 Redirect to Google",
+							"status": "Found",
+							"code": 302,
+							"header": [
+								{
+									"key": "Location",
+									"value": "https://accounts.google.com/o/oauth2/auth?client_id=...&state=secureLinkingState..."
+								}
+							],
+							"body": ""
+						}
+					]
+				},
+				{
+					"name": "2. Google Linking Callback (Browser Redirect)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/google/link/callback?state=secureLinkingState...&code=4/0Abc...",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"google",
+								"link",
+								"callback"
+							],
+							"query": [
+								{
+									"key": "state",
+									"value": "secureLinkingState..."
+								},
+								{
+									"key": "code",
+									"value": "4/0Abc..."
+								}
+							]
+						},
+						"description": "Google redirects back to this endpoint. Backend validates state from cache, extracts the initiating user ID safely from server-side state, links the verified Google identity, and redirects to FRONTEND_LINK_CALLBACK_URL with `#status=linked_success` or `#error=...`."
+					},
+					"response": [
+						{
+							"name": "302 Redirect to Settings",
+							"status": "Found",
+							"code": 302,
+							"header": [
+								{
+									"key": "Location",
+									"value": "http://localhost:3000/settings/connections#status=linked_success"
+								}
+							],
+							"body": ""
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "05. Password Reset",
+			"item": [
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"john.doe@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/forgot-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"forgot-password"
+							]
+						},
+						"description": "Sends a password reset link expiring in 60 minutes. Always returns a generic response regardless of whether the email is registered to prevent user enumeration."
+					},
+					"response": [
+						{
+							"name": "200 Generic Success",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"data\": null,\n    \"meta\": {\n        \"message\": \"If your email is registered, you will receive a password reset link.\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"john.doe@example.com\",\n    \"token\": \"sample_token_from_email_link\",\n    \"password\": \"NewSuperPass#2026\",\n    \"password_confirmation\": \"NewSuperPass#2026\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/reset-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"reset-password"
+							]
+						},
+						"description": "Resets the user's password using the single-use token. Enforces the 12-char mixed/numbers/symbols password policy. Revokes all active Personal Access Tokens for that user across all devices."
+					},
+					"response": [
+						{
+							"name": "200 Success",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"data\": null,\n    \"meta\": {\n        \"message\": \"Password has been reset successfully. Please sign in with your new password.\"\n    }\n}"
+						},
+						{
+							"name": "422 Invalid / Expired Token",
+							"status": "Unprocessable Content",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"error\": {\n        \"code\": \"invalid_reset_token\",\n        \"message\": \"This password reset token is invalid.\",\n        \"details\": {\n            \"email\": [\n                \"This password reset token is invalid.\"\n            ]\n        }\n    }\n}"
+						}
+					]
+				}
+			]
+		}
+	]
+}
+
