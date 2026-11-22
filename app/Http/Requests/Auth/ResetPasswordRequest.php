@@ -17,6 +17,17 @@ class ResetPasswordRequest extends FormRequest
     }
 
     /**
+     * Normalize the email before validation to prevent case-sensitivity issues
+     * and ensure consistent lookup in password_reset_tokens.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('email')) {
+            $this->merge(['email' => strtolower(trim((string) $this->input('email')))]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>

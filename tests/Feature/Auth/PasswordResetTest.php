@@ -121,3 +121,62 @@ test('reset password enforces password policy', function () {
 
     expect($response->json('error.details'))->toHaveKey('password');
 });
+
+test('forgot password normalizes email casing before lookup', function () {
+    Notification::fake();
+
+    $user = User::factory()->create(['email' => 'member@example.com']);
+
+    // Send with uppercase characters — should still match and send notification
+    $response = $this->postJson('/api/v1/auth/forgot-password', [
+        'email' => 'MEMBER@EXAMPLE.COM',
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('meta.message', __('auth.password_reset_link_sent'));
+
+    Notification::assertSentTo($user, ResetPasswordNotification::class);
+});
+
+test('reset password normalizes email casing before token lookup', function () {
+    $user = User::factory()->create([
+        'email' => 'user@example.com',
+        'password' => Hash::make('OldPassword#123'),
+    ]);
+
+    $resetToken = Password::broker()->createToken($user);
+
+    // Submit with mixed-case email — the normalized value must match the stored token
+    $response = $this->postJson('/api/v1/auth/reset-password', [
+        'email' => 'USER@EXAMPLE.COM',
+        'token' => $resetToken,
+        'password' => 'NewPassWord#2026',
+        'password_confirmation' => 'NewPassWord#2026',
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('meta.message', __('auth.password_reset_successfully'));
+});
+
+test('reset password is rejected for suspended accounts without leaking account status', function () {
+    $user = User::factory()->suspended()->create([
+        'email' => 'suspended@example.com',
+    ]);
+
+    $resetToken = Password::broker()->createToken($user);
+
+    $response = $this->postJson('/api/v1/auth/reset-password', [
+        'email' => 'suspended@example.com',
+        'token' => $resetToken,
+        'password' => 'BrandNew#2026',
+        'password_confirmation' => 'BrandNew#2026',
+    ]);
+
+    // Returns 422 with the same generic error code as an invalid/expired token
+    $response->assertStatus(422)
+        ->assertJsonPath('error.code', 'invalid_reset_token');
+
+    // Password must NOT have changed
+    $user->refresh();
+    expect(Hash::check('BrandNew#2026', $user->password))->toBeFalse();
+});

@@ -33,6 +33,14 @@ class PasswordResetService
      */
     public function resetPassword(array $credentials): string
     {
+        $credentials['email'] = strtolower(trim($credentials['email']));
+
+        $user = User::where('email', $credentials['email'])->first();
+
+        if ($user && $user->isSuspended()) {
+            return Password::INVALID_USER;
+        }
+
         return $this->broker()->reset($credentials, function (User $user, string $password) {
             $user->forceFill([
                 'password' => Hash::make($password),

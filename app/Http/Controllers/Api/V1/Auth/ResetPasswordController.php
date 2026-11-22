@@ -26,9 +26,9 @@ class ResetPasswordController extends Controller
         }
 
         return $this->failureResponse(
-            __($status),
+            __('auth.invalid_or_expired_token'),
             'invalid_reset_token',
-            ['email' => [__($status)]],
+            ['email' => [__('auth.invalid_or_expired_token')]],
             Response::HTTP_UNPROCESSABLE_ENTITY
         );
     }
