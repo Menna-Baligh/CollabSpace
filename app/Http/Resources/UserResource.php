@@ -22,13 +22,9 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
-            'email_verified' => ! is_null($this->email_verified_at),
-            'system_role' => $this->system_role->value,
-            'is_suspended' => $this->isSuspended(),
             'is_google_linked' => $this->isLinkedTo('google'),
-            'has_password' => $this->hasPassword(),
-            'created_at' => $this->created_at?->toISOString(),
-            'updated_at' => $this->updated_at?->toISOString(),
+            'created_at' => $this->created_at?->format('Y-m-d h:i:s A'),
+            'updated_at' => $this->updated_at?->format('Y-m-d h:i:s A'),
         ];
     }
 }
