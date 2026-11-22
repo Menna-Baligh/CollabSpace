@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\ProjectRole;
 use App\Enums\SystemRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -97,5 +99,54 @@ class User extends Authenticatable
         }
 
         return $this->oauthIdentities()->where('provider', $provider)->exists();
+    }
+
+    /**
+     * Projects associated with the user.
+     *
+     * @return BelongsToMany<Project, $this>
+     */
+    public function projects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class, 'project_user')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
+    /**
+     * Project teams associated with the user.
+     *
+     * @return BelongsToMany<ProjectTeam, $this>
+     */
+    public function projectTeams(): BelongsToMany
+    {
+        return $this->belongsToMany(ProjectTeam::class, 'project_team_user')
+            ->withPivot('role_title')
+            ->withTimestamps();
+    }
+
+    /**
+     * Check if the user is a Project Manager of a given project.
+     */
+    public function isProjectManagerOf(Project|int $project): bool
+    {
+        $projectId = $project instanceof Project ? $project->id : $project;
+
+        return $this->projects()
+            ->where('projects.id', $projectId)
+            ->wherePivot('role', ProjectRole::PROJECT_MANAGER->value)
+            ->exists();
+    }
+
+    /**
+     * Check if the user is a member of a given project.
+     */
+    public function isMemberOfProject(Project|int $project): bool
+    {
+        $projectId = $project instanceof Project ? $project->id : $project;
+
+        return $this->projects()
+            ->where('projects.id', $projectId)
+            ->exists();
     }
 }
