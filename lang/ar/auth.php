@@ -16,9 +16,7 @@ return [
     'invalid_or_expired_token' => 'رمز إعادة تعيين كلمة المرور هذا غير صالح أو انتهت صلاحيته.',
     'oauth_invalid_state' => 'حالة OAuth غير صالحة أو انتهت صلاحيتها.',
     'oauth_unverified_email' => 'عنوان بريدك الإلكتروني على Google غير مؤكد.',
-    'oauth_account_exists_unlinked' => 'يوجد حساب بالفعل بهذا البريد الإلكتروني. يرجى تسجيل الدخول بالبريد الإلكتروني وكلمة المرور، ثم ربط حساب Google الخاص بك في الإعدادات.',
+    'oauth_account_exists_unlinked' => 'يوجد حساب بالفعل بهذا البريد الإلكتروني. يرجى تسجيل الدخول بالبريد الإلكتروني وكلمة المرور.',
     'oauth_provider_already_linked' => 'حساب Google هذا مرتبط بالفعل بمستخدم آخر.',
-    'oauth_already_linked' => 'حسابك مرتبط بالفعل بحساب Google.',
-    'oauth_linked_successfully' => 'تم ربط حساب Google بنجاح.',
     'invalid_exchange_code' => 'رمز التبادل غير صالح أو انتهت صلاحيته.',
 ];

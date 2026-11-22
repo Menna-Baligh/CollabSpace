@@ -16,9 +16,7 @@ return [
     'invalid_or_expired_token' => 'This password reset token is invalid or has expired.',
     'oauth_invalid_state' => 'The OAuth state is invalid or has expired.',
     'oauth_unverified_email' => 'Your Google email address is not verified.',
-    'oauth_account_exists_unlinked' => 'An account already exists with this email address. Please sign in with your email and password, then link your Google account in Settings.',
+    'oauth_account_exists_unlinked' => 'An account already exists with this email address. Please sign in with your email and password.',
     'oauth_provider_already_linked' => 'This Google account is already linked to another user.',
-    'oauth_already_linked' => 'Your account is already linked to a Google account.',
-    'oauth_linked_successfully' => 'Google account linked successfully.',
     'invalid_exchange_code' => 'The exchange code is invalid or has expired.',
 ];

@@ -18,16 +18,15 @@ class GoogleOAuthService
     public const STATE_TTL = 300;
 
     /**
-     * Generate and cache a secure OAuth state token.
+     * Generate and cache a secure OAuth state token for login/signup.
      */
-    public function generateState(string $action = 'login', ?int $userId = null): string
+    public function generateState(): string
     {
         $state = Str::random(40);
         $key = "auth:oauth_state:{$state}";
 
         Cache::put($key, [
-            'action' => $action,
-            'user_id' => $userId,
+            'action' => 'login',
         ], self::STATE_TTL);
 
         return $state;
@@ -36,7 +35,7 @@ class GoogleOAuthService
     /**
      * Atomically consume an OAuth state token.
      *
-     * @return array{action: string, user_id: ?int}|null
+     * @return array{action: string}|null
      */
     public function consumeState(string $state): ?array
     {
@@ -100,13 +99,14 @@ class GoogleOAuthService
 
         // Create new Google-only user
         $newUser = DB::transaction(function () use ($googleUser, $email, $googleId) {
-            $user = User::create([
+            $user = new User([
                 'name' => $googleUser->getName() ?: 'User',
                 'email' => $email,
                 'password' => null,
-                'system_role' => SystemRole::USER,
-                'email_verified_at' => now(),
             ]);
+            $user->system_role = SystemRole::USER;
+            $user->email_verified_at = now();
+            $user->save();
 
             OAuthIdentity::create([
                 'user_id' => $user->id,
@@ -120,60 +120,6 @@ class GoogleOAuthService
         $code = $this->generateExchangeCode($newUser);
 
         return ['code' => $code];
-    }
-
-    /**
-     * Process Google account linking callback for an authenticated user.
-     *
-     * @return array{status?: string, error?: string}
-     */
-    public function handleLinkCallback(User $user, SocialiteUser $googleUser): array
-    {
-        if ($user->isSuspended()) {
-            return ['error' => 'account_suspended'];
-        }
-
-        $rawUser = $googleUser->getRaw();
-        $isEmailVerified = (bool) ($rawUser['email_verified'] ?? false);
-
-        if (! $isEmailVerified) {
-            return ['error' => 'oauth_unverified_email'];
-        }
-
-        $googleId = (string) $googleUser->getId();
-
-        // Check if this Google identity is already linked to another user
-        $existingIdentity = OAuthIdentity::where('provider', 'google')
-            ->where('provider_id', $googleId)
-            ->first();
-
-        if ($existingIdentity && $existingIdentity->user_id !== $user->id) {
-            return ['error' => 'oauth_provider_already_linked'];
-        }
-
-        if ($existingIdentity && $existingIdentity->user_id === $user->id) {
-            return ['status' => 'already_linked'];
-        }
-
-        // Check if the current user already has a linked Google account
-        $userAlreadyLinked = OAuthIdentity::where('user_id', $user->id)
-            ->where('provider', 'google')
-            ->exists();
-
-        if ($userAlreadyLinked) {
-            return ['error' => 'oauth_already_linked'];
-        }
-
-        // Link identity atomically
-        DB::transaction(function () use ($user, $googleId) {
-            OAuthIdentity::create([
-                'user_id' => $user->id,
-                'provider' => 'google',
-                'provider_id' => $googleId,
-            ]);
-        });
-
-        return ['status' => 'linked_success'];
     }
 
     /**

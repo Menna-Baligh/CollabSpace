@@ -14,7 +14,7 @@ test('a new user can register successfully and receive a 24-hour token', functio
     $response->assertCreated()
         ->assertJsonStructure([
             'data' => [
-                'user' => ['id', 'name', 'email', 'system_role', 'is_suspended', 'is_google_linked', 'has_password'],
+                'user' => ['id', 'name', 'email', 'is_google_linked', 'created_at', 'updated_at'],
                 'token',
                 'token_type',
                 'expires_in',
@@ -24,7 +24,9 @@ test('a new user can register successfully and receive a 24-hour token', functio
 
     expect($response->json('data.token_type'))->toBe('Bearer')
         ->and($response->json('data.expires_in'))->toBe(86400)
-        ->and($response->json('data.user.system_role'))->toBe('user');
+        ->and($response->json('data.user.email'))->toBe('john@example.com')
+        ->and($response->json('data.user.name'))->toBe('John Doe')
+        ->and($response->json('data.user.is_google_linked'))->toBeFalse();
 
     $user = User::where('email', 'john@example.com')->first();
     expect($user)->not->toBeNull()

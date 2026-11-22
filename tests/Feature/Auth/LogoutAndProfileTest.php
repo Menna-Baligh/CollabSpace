@@ -14,10 +14,10 @@ test('authenticated user can view their own profile', function () {
         ->getJson('/api/v1/auth/me');
 
     $response->assertOk()
+        ->assertJsonPath('data.id', $user->id)
         ->assertJsonPath('data.name', 'Alice Wonder')
         ->assertJsonPath('data.email', 'alice@example.com')
-        ->assertJsonPath('data.system_role', 'user')
-        ->assertJsonPath('data.is_suspended', false);
+        ->assertJsonPath('data.is_google_linked', false);
 });
 
 test('unauthenticated user cannot view profile', function () {

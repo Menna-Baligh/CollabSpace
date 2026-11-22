@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "c1f7481b-a45e-4c74-9f86-21a4f32c3f1a",
 		"name": "CollabSpace - Authentication API",
-		"description": "Production-grade Authentication API collection for CollabSpace REST API under /api/v1/auth.\n\nIncludes Email/Password registration & login, Remember Me (24h vs 30d tokens), Logout, User Profile (/me), Google OAuth Sign-in & Sign-up, Google Account Linking, and Password Reset.",
+		"description": "Production-grade Authentication API collection for CollabSpace REST API under /api/v1/auth.\n\nIncludes Email/Password registration & login, Remember Me (24h vs 30d tokens), Logout, User Profile (/me), Google OAuth Sign-in & Sign-up, and Password Reset.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -68,7 +68,7 @@
 									"value": "application/json"
 								}
 							],
-							"body": "{\n    \"data\": {\n        \"user\": {\n            \"id\": 1,\n            \"name\": \"John Doe\",\n            \"email\": \"john.doe@example.com\",\n            \"email_verified\": false,\n            \"system_role\": \"user\",\n            \"is_suspended\": false,\n            \"is_google_linked\": false,\n            \"has_password\": true,\n            \"created_at\": \"2026-11-21T21:00:00.000000Z\",\n            \"updated_at\": \"2026-11-21T21:00:00.000000Z\"\n        },\n        \"token\": \"1|exampleSanctumTokenValueGoesHere\",\n        \"token_type\": \"Bearer\",\n        \"expires_in\": 86400\n    },\n    \"meta\": {\n        \"message\": \"Registration successful.\"\n    }\n}"
+							"body": "{\n    \"data\": {\n        \"user\": {\n            \"id\": 1,\n            \"name\": \"John Doe\",\n            \"email\": \"john.doe@example.com\",\n            \"is_google_linked\": false,\n            \"created_at\": \"2026-11-21 09:00:00 PM\",\n            \"updated_at\": \"2026-11-21 09:00:00 PM\"\n        },\n        \"token\": \"1|exampleSanctumTokenValueGoesHere\",\n        \"token_type\": \"Bearer\",\n        \"expires_in\": 86400\n    },\n    \"meta\": {\n        \"message\": \"Registration successful.\"\n    }\n}"
 						},
 						{
 							"name": "422 Validation Error",
@@ -131,7 +131,7 @@
 									"value": "application/json"
 								}
 							],
-							"body": "{\n    \"data\": {\n        \"user\": {\n            \"id\": 1,\n            \"name\": \"John Doe\",\n            \"email\": \"john.doe@example.com\",\n            \"email_verified\": false,\n            \"system_role\": \"user\",\n            \"is_suspended\": false,\n            \"is_google_linked\": false,\n            \"has_password\": true,\n            \"created_at\": \"2026-11-21T21:00:00.000000Z\",\n            \"updated_at\": \"2026-11-21T21:00:00.000000Z\"\n        },\n        \"token\": \"2|sanctumPersonalAccessToken24h\",\n        \"token_type\": \"Bearer\",\n        \"expires_in\": 86400\n    },\n    \"meta\": {\n        \"message\": \"Logged in successfully.\"\n    }\n}"
+							"body": "{\n    \"data\": {\n        \"user\": {\n            \"id\": 1,\n            \"name\": \"John Doe\",\n            \"email\": \"john.doe@example.com\",\n            \"is_google_linked\": false,\n            \"created_at\": \"2026-11-21 09:00:00 PM\",\n            \"updated_at\": \"2026-11-21 09:00:00 PM\"\n        },\n        \"token\": \"2|sanctumPersonalAccessToken24h\",\n        \"token_type\": \"Bearer\",\n        \"expires_in\": 86400\n    },\n    \"meta\": {\n        \"message\": \"Logged in successfully.\"\n    }\n}"
 						},
 						{
 							"name": "401 Invalid Credentials",
@@ -194,7 +194,7 @@
 									"value": "application/json"
 								}
 							],
-							"body": "{\n    \"data\": {\n        \"user\": {\n            \"id\": 1,\n            \"name\": \"John Doe\",\n            \"email\": \"john.doe@example.com\",\n            \"email_verified\": false,\n            \"system_role\": \"user\",\n            \"is_suspended\": false,\n            \"is_google_linked\": false,\n            \"has_password\": true,\n            \"created_at\": \"2026-11-21T21:00:00.000000Z\",\n            \"updated_at\": \"2026-11-21T21:00:00.000000Z\"\n        },\n        \"token\": \"3|sanctumPersonalAccessToken30Days\",\n        \"token_type\": \"Bearer\",\n        \"expires_in\": 2592000\n    },\n    \"meta\": {\n        \"message\": \"Logged in successfully.\"\n    }\n}"
+							"body": "{\n    \"data\": {\n        \"user\": {\n            \"id\": 1,\n            \"name\": \"John Doe\",\n            \"email\": \"john.doe@example.com\",\n            \"is_google_linked\": false,\n            \"created_at\": \"2026-11-21 09:00:00 PM\",\n            \"updated_at\": \"2026-11-21 09:00:00 PM\"\n        },\n        \"token\": \"3|sanctumPersonalAccessToken30Days\",\n        \"token_type\": \"Bearer\",\n        \"expires_in\": 2592000\n    },\n    \"meta\": {\n        \"message\": \"Logged in successfully.\"\n    }\n}"
 						}
 					]
 				},
@@ -305,7 +305,7 @@
 									"value": "application/json"
 								}
 							],
-							"body": "{\n    \"data\": {\n        \"id\": 1,\n        \"name\": \"John Doe\",\n        \"email\": \"john.doe@example.com\",\n        \"email_verified\": true,\n        \"system_role\": \"user\",\n        \"is_suspended\": false,\n        \"is_google_linked\": true,\n        \"has_password\": true,\n        \"created_at\": \"2026-11-21T21:00:00.000000Z\",\n        \"updated_at\": \"2026-11-21T21:00:00.000000Z\"\n    },\n    \"meta\": {}\n}"
+							"body": "{\n    \"data\": {\n        \"id\": 1,\n        \"name\": \"John Doe\",\n        \"email\": \"john.doe@example.com\",\n        \"is_google_linked\": false,\n        \"created_at\": \"2026-11-21 09:00:00 PM\",\n        \"updated_at\": \"2026-11-21 09:00:00 PM\"\n    },\n    \"meta\": {}\n}"
 						},
 						{
 							"name": "403 Account Suspended",
@@ -464,7 +464,7 @@
 									"value": "application/json"
 								}
 							],
-							"body": "{\n    \"data\": {\n        \"user\": {\n            \"id\": 2,\n            \"name\": \"Google User\",\n            \"email\": \"user@gmail.com\",\n            \"email_verified\": true,\n            \"system_role\": \"user\",\n            \"is_suspended\": false,\n            \"is_google_linked\": true,\n            \"has_password\": false,\n            \"created_at\": \"2026-11-21T21:00:00.000000Z\",\n            \"updated_at\": \"2026-11-21T21:00:00.000000Z\"\n        },\n        \"token\": \"4|sanctumPersonalAccessToken24h\",\n        \"token_type\": \"Bearer\",\n        \"expires_in\": 86400\n    },\n    \"meta\": {\n        \"message\": \"Logged in successfully.\"\n    }\n}"
+							"body": "{\n    \"data\": {\n        \"user\": {\n            \"id\": 2,\n            \"name\": \"Google User\",\n            \"email\": \"user@gmail.com\",\n            \"is_google_linked\": true,\n            \"created_at\": \"2026-11-21 09:00:00 PM\",\n            \"updated_at\": \"2026-11-21 09:00:00 PM\"\n        },\n        \"token\": \"4|sanctumPersonalAccessToken24h\",\n        \"token_type\": \"Bearer\",\n        \"expires_in\": 86400\n    },\n    \"meta\": {\n        \"message\": \"Logged in successfully.\"\n    }\n}"
 						},
 						{
 							"name": "401 Invalid or Replayed Code",
@@ -483,108 +483,7 @@
 			]
 		},
 		{
-			"name": "04. Google Account Linking",
-			"item": [
-				{
-					"name": "1. Start Google Linking (Authenticated)",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							},
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/api/v1/auth/google/link/redirect",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"auth",
-								"google",
-								"link",
-								"redirect"
-							]
-						},
-						"description": "Authenticated user initiates Google account linking. Backend binds the authenticated user ID into a secure state stored in cache (5-min TTL) and redirects to Google."
-					},
-					"response": [
-						{
-							"name": "302 Redirect to Google",
-							"status": "Found",
-							"code": 302,
-							"header": [
-								{
-									"key": "Location",
-									"value": "https://accounts.google.com/o/oauth2/auth?client_id=...&state=secureLinkingState..."
-								}
-							],
-							"body": ""
-						}
-					]
-				},
-				{
-					"name": "2. Google Linking Callback (Browser Redirect)",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/api/v1/auth/google/link/callback?state=secureLinkingState...&code=4/0Abc...",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"auth",
-								"google",
-								"link",
-								"callback"
-							],
-							"query": [
-								{
-									"key": "state",
-									"value": "secureLinkingState..."
-								},
-								{
-									"key": "code",
-									"value": "4/0Abc..."
-								}
-							]
-						},
-						"description": "Google redirects back to this endpoint. Backend validates state from cache, extracts the initiating user ID safely from server-side state, links the verified Google identity, and redirects to FRONTEND_LINK_CALLBACK_URL with `#status=linked_success` or `#error=...`."
-					},
-					"response": [
-						{
-							"name": "302 Redirect to Settings",
-							"status": "Found",
-							"code": 302,
-							"header": [
-								{
-									"key": "Location",
-									"value": "http://localhost:3000/settings/connections#status=linked_success"
-								}
-							],
-							"body": ""
-						}
-					]
-				}
-			]
-		},
-		{
-			"name": "05. Password Reset",
+			"name": "04. Password Reset",
 			"item": [
 				{
 					"name": "Forgot Password",
@@ -704,4 +603,3 @@
 		}
 	]
 }
-
