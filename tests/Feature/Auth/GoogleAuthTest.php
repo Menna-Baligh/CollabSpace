@@ -7,13 +7,18 @@ use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\GoogleProvider;
 use Laravel\Socialite\Two\User as SocialiteUser;
 
-test('google redirect endpoint initiates OAuth and redirects to Google with state', function () {
-    $response = $this->get('/api/v1/auth/google/redirect');
+test('google redirect endpoint returns google oauth url as json', function () {
+    $response = $this->getJson('/api/v1/auth/google/redirect');
 
-    $response->assertRedirect();
-    $targetUrl = $response->headers->get('Location');
-    expect($targetUrl)->toContain('accounts.google.com')
-        ->and($targetUrl)->toContain('state=');
+    $response->assertOk()
+        ->assertJsonStructure([
+            'data' => ['url'],
+            'meta',
+        ]);
+
+    $url = $response->json('data.url');
+    expect($url)->toContain('accounts.google.com')
+        ->and($url)->toContain('state=');
 });
 
 test('google callback with invalid or missing state redirects to frontend with error', function () {
@@ -24,7 +29,7 @@ test('google callback with invalid or missing state redirects to frontend with e
 
 test('google callback with unverified google email redirects with error', function () {
     $service = app(GoogleOAuthService::class);
-    $state = $service->generateState('login');
+    $state = $service->generateState();
 
     $googleUser = Mockery::mock(SocialiteUser::class);
     $googleUser->shouldReceive('getRaw')->andReturn(['email_verified' => false]);
@@ -47,7 +52,7 @@ test('google callback for existing unlinked email account rejects login to preve
     ]);
 
     $service = app(GoogleOAuthService::class);
-    $state = $service->generateState('login');
+    $state = $service->generateState();
 
     $googleUser = Mockery::mock(SocialiteUser::class);
     $googleUser->shouldReceive('getId')->andReturn('google-id-123');
@@ -67,7 +72,7 @@ test('google callback for existing unlinked email account rejects login to preve
 
 test('google callback for brand new user creates account with null password and generates exchange code', function () {
     $service = app(GoogleOAuthService::class);
-    $state = $service->generateState('login');
+    $state = $service->generateState();
 
     $googleUser = Mockery::mock(SocialiteUser::class);
     $googleUser->shouldReceive('getId')->andReturn('google-sub-456');
@@ -107,7 +112,7 @@ test('google callback for already linked active user generates exchange code', f
     ]);
 
     $service = app(GoogleOAuthService::class);
-    $state = $service->generateState('login');
+    $state = $service->generateState();
 
     $googleUser = Mockery::mock(SocialiteUser::class);
     $googleUser->shouldReceive('getId')->andReturn('existing-google-id');
@@ -135,7 +140,7 @@ test('google callback for already linked suspended user is rejected', function (
     ]);
 
     $service = app(GoogleOAuthService::class);
-    $state = $service->generateState('login');
+    $state = $service->generateState();
 
     $googleUser = Mockery::mock(SocialiteUser::class);
     $googleUser->shouldReceive('getId')->andReturn('suspended-google-id');

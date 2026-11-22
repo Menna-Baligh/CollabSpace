@@ -17,19 +17,22 @@ use Throwable;
 class GoogleAuthController extends Controller
 {
     /**
-     * Start the Google OAuth flow by redirecting to Google's consent screen.
+     * Return the Google OAuth authorization URL as JSON so the frontend can redirect the user.
      */
-    public function redirect(GoogleOAuthService $googleOAuthService): RedirectResponse
+    public function redirect(GoogleOAuthService $googleOAuthService): JsonResponse
     {
-        $state = $googleOAuthService->generateState('login');
+        $state = $googleOAuthService->generateState();
 
         /** @var GoogleProvider $driver */
         $driver = Socialite::driver('google');
 
-        return $driver
+        $url = $driver
             ->stateless()
             ->with(['state' => $state])
-            ->redirect();
+            ->redirect()
+            ->getTargetUrl();
+
+        return $this->successResponse(['url' => $url]);
     }
 
     /**
