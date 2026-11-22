@@ -1,0 +1,896 @@
+{
+	"info": {
+		"_postman_id": "c1f72e38-4e89-4a9f-8561-9c8e11a3b402",
+		"name": "CollabSpace - 02. Projects & Teams",
+		"description": "Slice 2: Projects & Teams API endpoints for CollabSpace RESTful API.\nIncludes full Projects CRUD, Archiving, Project Members, Project Teams, Team Members, and Admin User Suspension with Atomic Handover.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "1|sanctumPlainTextTokenHere",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Projects",
+			"item": [
+				{
+					"name": "1. List Projects",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects?search=Collab&status=active&sort=priority&per_page=15",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects"],
+							"query": [
+								{
+									"key": "search",
+									"value": "Collab",
+									"description": "Search by project name"
+								},
+								{
+									"key": "status",
+									"value": "active",
+									"description": "Filter by status: all, active, done, archived"
+								},
+								{
+									"key": "sort",
+									"value": "priority",
+									"description": "Sort order: newest, oldest, deadline, priority"
+								},
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Pagination limit (max 100)"
+								}
+							]
+						},
+						"description": "List all non-deleted projects in the system. Accessible to any authenticated user."
+					},
+					"response": [
+						{
+							"name": "200 OK — List Projects",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n\t\"data\": [\n\t\t{\n\t\t\t\"id\": 1,\n\t\t\t\"name\": \"CollabSpace Backend 2.0\",\n\t\t\t\"icon\": \"server\",\n\t\t\t\"color\": \"#10B981\",\n\t\t\t\"start_date\": \"2026-11-20\",\n\t\t\t\"deadline\": \"2026-12-31\",\n\t\t\t\"status\": \"active\",\n\t\t\t\"priority\": \"high\",\n\t\t\t\"files_count\": 0,\n\t\t\t\"members_count\": 5,\n\t\t\t\"members_preview\": [\n\t\t\t\t{\n\t\t\t\t\t\"id\": 1,\n\t\t\t\t\t\"name\": \"Sarah Connor\",\n\t\t\t\t\t\"avatar_url\": null\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t],\n\t\"meta\": {\n\t\t\"current_page\": 1,\n\t\t\"last_page\": 1,\n\t\t\"per_page\": 15,\n\t\t\"total\": 1\n\t}\n}"
+						}
+					]
+				},
+				{
+					"name": "2. Create Project",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"CollabSpace Real-Time Chat\",\n\t\"description\": \"Real-time collaboration features with WebSockets.\",\n\t\"project_type\": \"Backend Development\",\n\t\"start_date\": \"2026-12-01\",\n\t\"deadline\": \"2027-01-15\",\n\t\"priority\": \"high\",\n\t\"color\": \"#3B82F6\",\n\t\"icon\": \"chat\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects"]
+						},
+						"description": "Create a new project. The authenticated user is automatically assigned as the first project manager."
+					},
+					"response": [
+						{
+							"name": "201 Created — Project Created",
+							"status": "Created",
+							"code": 201,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n\t\"data\": {\n\t\t\"id\": 2,\n\t\t\"name\": \"CollabSpace Real-Time Chat\",\n\t\t\"description\": \"Real-time collaboration features with WebSockets.\",\n\t\t\"project_type\": \"Backend Development\",\n\t\t\"start_date\": \"2026-12-01\",\n\t\t\"deadline\": \"2027-01-15\",\n\t\t\"priority\": \"high\",\n\t\t\"status\": \"active\",\n\t\t\"color\": \"#3B82F6\",\n\t\t\"icon\": \"chat\",\n\t\t\"archived_at\": null,\n\t\t\"completion_percentage\": 0,\n\t\t\"timeline_progress_percentage\": 0,\n\t\t\"total_tasks\": 0,\n\t\t\"pending_tasks\": 0,\n\t\t\"in_progress_tasks\": 0,\n\t\t\"completed_tasks\": 0,\n\t\t\"total_tasks_count\": 0,\n\t\t\"members\": [\n\t\t\t{\n\t\t\t\t\"id\": 1,\n\t\t\t\t\"name\": \"Sarah Connor\",\n\t\t\t\t\"avatar\": null,\n\t\t\t\t\"role\": \"project_manager\",\n\t\t\t\t\"is_leader\": false\n\t\t\t}\n\t\t]\n\t},\n\t\"meta\": {\n\t\t\"message\": \"Project created successfully.\"\n\t}\n}"
+						}
+					]
+				},
+				{
+					"name": "3. Show Project",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/1?team_id=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "1"],
+							"query": [
+								{
+									"key": "team_id",
+									"value": "",
+									"description": "Optional: Filter members to only those belonging to this team"
+								}
+							]
+						},
+						"description": "Get detailed project information including computed timeline progress and member list. Accessible to any authenticated user."
+					},
+					"response": [
+						{
+							"name": "200 OK — Show Project",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n\t\"data\": {\n\t\t\"id\": 1,\n\t\t\"name\": \"CollabSpace Backend 2.0\",\n\t\t\"description\": \"Modular architecture.\",\n\t\t\"project_type\": \"Backend Development\",\n\t\t\"start_date\": \"2026-11-01\",\n\t\t\"deadline\": \"2026-12-31\",\n\t\t\"priority\": \"high\",\n\t\t\"status\": \"active\",\n\t\t\"color\": \"#10B981\",\n\t\t\"icon\": \"server\",\n\t\t\"archived_at\": null,\n\t\t\"completion_percentage\": 0,\n\t\t\"timeline_progress_percentage\": 37,\n\t\t\"total_tasks\": 0,\n\t\t\"pending_tasks\": 0,\n\t\t\"in_progress_tasks\": 0,\n\t\t\"completed_tasks\": 0,\n\t\t\"total_tasks_count\": 0,\n\t\t\"members\": [\n\t\t\t{\n\t\t\t\t\"id\": 1,\n\t\t\t\t\"name\": \"Sarah Connor\",\n\t\t\t\t\"avatar\": null,\n\t\t\t\t\"role\": \"project_manager\",\n\t\t\t\t\"is_leader\": true\n\t\t\t}\n\t\t]\n\t},\n\t\"meta\": {}\n}"
+						}
+					]
+				},
+				{
+					"name": "4. Update Project",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"CollabSpace Backend 2.1 (Performance Edition)\",\n\t\"status\": \"done\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "1"]
+						},
+						"description": "Update project details. Only a Project Manager of this project can update it. Status can only be changed between active and done (archived status is prohibited here)."
+					},
+					"response": [
+						{
+							"name": "200 OK — Updated",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n\t\"data\": {\n\t\t\"id\": 1,\n\t\t\"name\": \"CollabSpace Backend 2.1 (Performance Edition)\",\n\t\t\"status\": \"done\"\n\t},\n\t\"meta\": {\n\t\t\"message\": \"Project updated successfully.\"\n\t}\n}"
+						}
+					]
+				},
+				{
+					"name": "5. Archive Project",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/1/archive",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "1", "archive"]
+						},
+						"description": "Archive project (status=archived, archived_at=now). Only Project Manager can archive."
+					},
+					"response": [
+						{
+							"name": "200 OK — Project Archived",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n\t\"data\": {\n\t\t\"id\": 1,\n\t\t\"status\": \"archived\",\n\t\t\"archived_at\": \"2026-11-22T21:00:00Z\"\n\t},\n\t\"meta\": {\n\t\t\"message\": \"Project archived successfully.\"\n\t}\n}"
+						}
+					]
+				},
+				{
+					"name": "6. Unarchive Project",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/1/unarchive",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "1", "unarchive"]
+						},
+						"description": "Unarchive project (status=active, archived_at=null). Only Project Manager can unarchive."
+					},
+					"response": [
+						{
+							"name": "200 OK — Project Unarchived",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n\t\"data\": {\n\t\t\"id\": 1,\n\t\t\"status\": \"active\",\n\t\t\"archived_at\": null\n\t},\n\t\"meta\": {\n\t\t\"message\": \"Project unarchived successfully.\"\n\t}\n}"
+						}
+					]
+				},
+				{
+					"name": "7. Delete Project",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "1"]
+						},
+						"description": "Soft-delete a project. Only Project Manager can delete."
+					},
+					"response": [
+						{
+							"name": "200 OK — Project Deleted",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n\t\"data\": null,\n\t\"meta\": {\n\t\t\"message\": \"Project deleted successfully.\"\n\t}\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "2. Project Members",
+			"item": [
+				{
+					"name": "1. Add Member",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"user_id\": 2,\n\t\"role\": \"member\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/1/members",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "1", "members"]
+						},
+						"description": "Add a user to project members. Only Project Manager can add members. Target user must be non-suspended."
+					},
+					"response": [
+						{
+							"name": "201 Created — Member Added",
+							"status": "Created",
+							"code": 201,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n\t\"data\": {\n\t\t\"id\": 2,\n\t\t\"name\": \"John Doe\",\n\t\t\"avatar\": null,\n\t\t\"role\": \"member\",\n\t\t\"is_leader\": false\n\t},\n\t\"meta\": {\n\t\t\"message\": \"Project member added successfully.\"\n\t}\n}"
+						}
+					]
+				},
+				{
+					"name": "2. Update Member Role",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"role\": \"project_manager\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/1/members/2",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "1", "members", "2"]
+						},
+						"description": "Promote or demote a project member. Last Project Manager protection enforced."
+					},
+					"response": [
+						{
+							"name": "200 OK — Role Updated",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n\t\"data\": {\n\t\t\"id\": 2,\n\t\t\"name\": \"John Doe\",\n\t\t\"avatar\": null,\n\t\t\"role\": \"project_manager\",\n\t\t\"is_leader\": false\n\t},\n\t\"meta\": {\n\t\t\"message\": \"Project member role updated successfully.\"\n\t}\n}"
+						}
+					]
+				},
+				{
+					"name": "3. Remove Member",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/1/members/2",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "1", "members", "2"]
+						},
+						"description": "Remove member from project. Automatically removes user from all project teams and clears leader assignments. Last Project Manager protection enforced."
+					},
+					"response": [
+						{
+							"name": "200 OK — Member Removed",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n\t\"data\": null,\n\t\"meta\": {\n\t\t\"message\": \"Project member removed successfully.\"\n\t}\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "3. Project Teams",
+			"item": [
+				{
+					"name": "1. List Teams",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/1/teams",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "1", "teams"]
+						},
+						"description": "List all teams belonging to a project. Accessible to any authenticated user."
+					},
+					"response": [
+						{
+							"name": "200 OK — List Teams",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n\t\"data\": [\n\t\t{\n\t\t\t\"id\": 1,\n\t\t\t\"name\": \"Backend Squad\",\n\t\t\t\"color\": \"#3B82F6\",\n\t\t\t\"completion_percentage\": 0,\n\t\t\t\"leader\": {\n\t\t\t\t\"id\": 1,\n\t\t\t\t\"name\": \"Sarah Connor\",\n\t\t\t\t\"avatar\": null,\n\t\t\t\t\"role_title\": \"Lead Architect\"\n\t\t\t},\n\t\t\t\"members\": [\n\t\t\t\t{\n\t\t\t\t\t\"id\": 1,\n\t\t\t\t\t\"name\": \"Sarah Connor\",\n\t\t\t\t\t\"avatar\": null,\n\t\t\t\t\"role_title\": \"Lead Architect\",\n\t\t\t\t\"is_leader\": true,\n\t\t\t\t\"assigned_tasks_count\": 0,\n\t\t\t\t\"completed_tasks_count\": 0\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t],\n\t\"meta\": {}\n}"
+						}
+					]
+				},
+				{
+					"name": "2. Create Team",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"DevOps & Cloud\",\n\t\"color\": \"#F59E0B\",\n\t\"leader_id\": 1,\n\t\"leader_role_title\": \"SRE Lead\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/1/teams",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "1", "teams"]
+						},
+						"description": "Create a new team in the project. Team names must be unique within the same project. Leader must already be a project member and is automatically added to team membership."
+					},
+					"response": [
+						{
+							"name": "201 Created — Team Created",
+							"status": "Created",
+							"code": 201,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n\t\"data\": {\n\t\t\"id\": 2,\n\t\t\"name\": \"DevOps & Cloud\",\n\t\t\"color\": \"#F59E0B\",\n\t\t\"completion_percentage\": 0,\n\t\t\"leader\": {\n\t\t\t\"id\": 1,\n\t\t\t\"name\": \"Sarah Connor\",\n\t\t\t\"avatar\": null,\n\t\t\t\"role_title\": \"SRE Lead\"\n\t\t},\n\t\t\"members\": [\n\t\t\t{\n\t\t\t\t\"id\": 1,\n\t\t\t\t\"name\": \"Sarah Connor\",\n\t\t\t\t\"avatar\": null,\n\t\t\t\t\"role_title\": \"SRE Lead\",\n\t\t\t\t\"is_leader\": true,\n\t\t\t\t\"assigned_tasks_count\": 0,\n\t\t\t\t\"completed_tasks_count\": 0\n\t\t\t}\n\t\t]\n\t},\n\t\"meta\": {\n\t\t\"message\": \"Team created successfully.\"\n\t}\n}"
+						}
+					]
+				},
+				{
+					"name": "3. Update Team",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Platform Engineering\",\n\t\"color\": \"#8B5CF6\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/1/teams/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "1", "teams", "1"]
+						},
+						"description": "Update team details or change team leader. Unique name enforced within the same project."
+					},
+					"response": [
+						{
+							"name": "200 OK — Team Updated",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n\t\"data\": {\n\t\t\"id\": 1,\n\t\t\"name\": \"Platform Engineering\",\n\t\t\"color\": \"#8B5CF6\"\n\t},\n\t\"meta\": {\n\t\t\"message\": \"Team updated successfully.\"\n\t}\n}"
+						}
+					]
+				},
+				{
+					"name": "4. Delete Team",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/1/teams/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "1", "teams", "1"]
+						},
+						"description": "Delete team. Only Project Manager can delete."
+					},
+					"response": [
+						{
+							"name": "200 OK — Team Deleted",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n\t\"data\": null,\n\t\"meta\": {\n\t\t\"message\": \"Team deleted successfully.\"\n\t}\n}"
+						}
+					]
+				},
+				{
+					"name": "5. Add Team Member",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"user_id\": 2,\n\t\"role_title\": \"Backend Engineer\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/1/teams/1/members",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "1", "teams", "1", "members"]
+						},
+						"description": "Add member to team. User must already be a member of the project."
+					},
+					"response": [
+						{
+							"name": "201 Created — Team Member Added",
+							"status": "Created",
+							"code": 201,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n\t\"data\": {\n\t\t\"id\": 2,\n\t\t\"name\": \"John Doe\",\n\t\t\"avatar\": null,\n\t\t\"role_title\": \"Backend Engineer\",\n\t\t\"is_leader\": false,\n\t\t\"assigned_tasks_count\": 0,\n\t\t\"completed_tasks_count\": 0\n\t},\n\t\"meta\": {\n\t\t\"message\": \"Team member added successfully.\"\n\t}\n}"
+						}
+					]
+				},
+				{
+					"name": "6. Remove Team Member",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/1/teams/1/members/2",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "1", "teams", "1", "members", "2"]
+						},
+						"description": "Remove member from team. If the user is the current leader, leader_id is set to null. Does not remove user from project."
+					},
+					"response": [
+						{
+							"name": "200 OK — Team Member Removed",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n\t\"data\": null,\n\t\"meta\": {\n\t\t\"message\": \"Team member removed successfully.\"\n\t}\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "4. User Suspension & Handover",
+			"item": [
+				{
+					"name": "1. Suspend Normal User (Admin Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/5/suspend",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "5", "suspend"]
+						},
+						"description": "Suspend a user account. Restricted to system administrators only. Revokes all Sanctum tokens."
+					},
+					"response": [
+						{
+							"name": "200 OK — User Suspended",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n\t\"data\": null,\n\t\"meta\": {\n\t\t\"message\": \"User suspended successfully.\"\n\t}\n}"
+						}
+					]
+				},
+				{
+					"name": "2. Suspend Sole Project Manager (Handover Required)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/2/suspend",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "2", "suspend"]
+						},
+						"description": "Attempting to suspend a sole Project Manager without providing replacement handovers returns 422 with a structured list of projects requiring handover."
+					},
+					"response": [
+						{
+							"name": "422 Unprocessable Entity — Handover Required",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n\t\"error\": {\n\t\t\"code\": \"handover_required\",\n\t\t\"message\": \"Handover required: user is the sole active project manager in one or more projects.\",\n\t\t\"details\": {\n\t\t\t\"projects\": [\n\t\t\t\t{\n\t\t\t\t\t\"id\": 1,\n\t\t\t\t\t\"name\": \"CollabSpace Backend 2.0\"\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t}\n}"
+						}
+					]
+				},
+				{
+					"name": "3. Suspend Sole Project Manager (With Handovers)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"handovers\": [\n\t\t{\n\t\t\t\"project_id\": 1,\n\t\t\t\"replacement_user_id\": 3\n\t\t}\n\t]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/2/suspend",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "2", "suspend"]
+						},
+						"description": "Suspend sole PM by supplying replacement handovers. Executed in a single atomic database transaction."
+					},
+					"response": [
+						{
+							"name": "200 OK — Handover Completed and Suspended",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n\t\"data\": null,\n\t\"meta\": {\n\t\t\"message\": \"User suspended successfully.\"\n\t}\n}"
+						}
+					]
+				}
+			]
+		}
+	]
+}
+
