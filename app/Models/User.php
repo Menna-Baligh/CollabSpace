@@ -126,6 +126,47 @@ class User extends Authenticatable
     }
 
     /**
+     * Tasks assigned to the user.
+     *
+     * @return BelongsToMany<Task, $this>
+     */
+    public function assignedTasks(): BelongsToMany
+    {
+        return $this->belongsToMany(Task::class, 'task_user')
+            ->withTimestamps();
+    }
+
+    /**
+     * Tasks reviewed by the user.
+     *
+     * @return HasMany<Task, $this>
+     */
+    public function reviewedTasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'reviewer_id');
+    }
+
+    /**
+     * Tasks created by the user.
+     *
+     * @return HasMany<Task, $this>
+     */
+    public function createdTasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'created_by');
+    }
+
+    /**
+     * Files uploaded by the user.
+     *
+     * @return HasMany<ProjectFile, $this>
+     */
+    public function uploadedFiles(): HasMany
+    {
+        return $this->hasMany(ProjectFile::class, 'uploaded_by');
+    }
+
+    /**
      * Check if the user is a Project Manager of a given project.
      */
     public function isProjectManagerOf(Project|int $project): bool

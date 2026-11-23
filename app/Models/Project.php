@@ -96,6 +96,26 @@ class Project extends Model
     }
 
     /**
+     * Project tasks relationship.
+     *
+     * @return HasMany<Task, $this>
+     */
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
+
+    /**
+     * Project files relationship.
+     *
+     * @return HasMany<ProjectFile, $this>
+     */
+    public function files(): HasMany
+    {
+        return $this->hasMany(ProjectFile::class);
+    }
+
+    /**
      * Determine if a given user is a member of this project.
      */
     public function hasMember(User|int $user): bool
