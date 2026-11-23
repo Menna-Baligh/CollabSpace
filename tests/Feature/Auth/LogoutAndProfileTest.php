@@ -11,7 +11,7 @@ test('authenticated user can view their own profile', function () {
     $token = $user->createToken('test_token')->plainTextToken;
 
     $response = $this->withHeader('Authorization', 'Bearer '.$token)
-        ->getJson('/api/v1/auth/me');
+        ->getJson(route('api.v1.auth.me'));
 
     $response->assertOk()
         ->assertJsonPath('data.id', $user->id)
@@ -21,7 +21,7 @@ test('authenticated user can view their own profile', function () {
 });
 
 test('unauthenticated user cannot view profile', function () {
-    $response = $this->getJson('/api/v1/auth/me');
+    $response = $this->getJson(route('api.v1.auth.me'));
 
     $response->assertStatus(401)
         ->assertJsonPath('error.code', 'unauthenticated');
@@ -32,7 +32,7 @@ test('suspended user with valid token is rejected with 403 account_suspended', f
     $token = $user->createToken('active_token')->plainTextToken;
 
     $response = $this->withHeader('Authorization', 'Bearer '.$token)
-        ->getJson('/api/v1/auth/me');
+        ->getJson(route('api.v1.auth.me'));
 
     $response->assertStatus(403)
         ->assertJsonPath('error.code', 'account_suspended');
@@ -49,7 +49,7 @@ test('logout revokes only the current personal access token while leaving other 
 
     // Logout from device 1
     $logoutResponse = $this->withHeader('Authorization', 'Bearer '.$device1Token)
-        ->postJson('/api/v1/auth/logout');
+        ->postJson(route('api.v1.auth.logout'));
 
     $logoutResponse->assertOk()
         ->assertJsonPath('meta.message', __('auth.logout_successfully'));
@@ -58,12 +58,12 @@ test('logout revokes only the current personal access token while leaving other 
 
     // Device 1 token is revoked and cannot access /me
     $checkDevice1 = $this->withHeader('Authorization', 'Bearer '.$device1Token)
-        ->getJson('/api/v1/auth/me');
+        ->getJson(route('api.v1.auth.me'));
     $checkDevice1->assertStatus(401);
 
     // Device 2 token is still active and can access /me
     $checkDevice2 = $this->withHeader('Authorization', 'Bearer '.$device2Token)
-        ->getJson('/api/v1/auth/me');
+        ->getJson(route('api.v1.auth.me'));
     $checkDevice2->assertOk()
         ->assertJsonPath('data.id', $user->id);
 

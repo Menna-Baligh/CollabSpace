@@ -59,7 +59,7 @@ test('project list files_count reflects real non-deleted files', function () {
     $file2->delete(); // Soft delete
 
     $response = $this->actingAs($this->pm)
-        ->getJson('/api/v1/projects')
+        ->getJson(route('api.v1.projects.index'))
         ->assertStatus(200);
 
     $projectItem = collect($response->json('data'))->firstWhere('id', $this->project->id);
@@ -115,7 +115,7 @@ test('project overview statistics calculate real task statistics and completion 
     $deletedTask->delete();
 
     $response = $this->actingAs($this->pm)
-        ->getJson("/api/v1/projects/{$this->project->id}")
+        ->getJson(route('api.v1.projects.show', $this->project))
         ->assertStatus(200)
         ->assertJsonPath('data.total_tasks', 5)
         ->assertJsonPath('data.total_tasks_count', 5)
@@ -127,7 +127,7 @@ test('project overview statistics calculate real task statistics and completion 
 
 test('project with zero tasks returns 0 completion percentage', function () {
     $this->actingAs($this->pm)
-        ->getJson("/api/v1/projects/{$this->project->id}")
+        ->getJson(route('api.v1.projects.show', $this->project))
         ->assertStatus(200)
         ->assertJsonPath('data.total_tasks', 0)
         ->assertJsonPath('data.completion_percentage', 0);
@@ -180,7 +180,7 @@ test('project teams calculate real task statistics for teams and members', funct
     $otherTeamTask->assignees()->attach($this->member1->id);
 
     $response = $this->actingAs($this->pm)
-        ->getJson("/api/v1/projects/{$this->project->id}/teams")
+        ->getJson(route('api.v1.projects.teams.index', $this->project))
         ->assertStatus(200);
 
     $team1Data = collect($response->json('data'))->firstWhere('id', $this->team1->id);

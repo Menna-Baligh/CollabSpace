@@ -9,10 +9,10 @@ use App\Models\User;
 use Laravel\Sanctum\Sanctum;
 
 test('unauthenticated user cannot list or view projects', function () {
-    $this->getJson('/api/v1/projects')->assertStatus(401);
+    $this->getJson(route('api.v1.projects.index'))->assertStatus(401);
 
     $project = Project::factory()->create();
-    $this->getJson("/api/v1/projects/{$project->id}")->assertStatus(401);
+    $this->getJson(route('api.v1.projects.show', $project))->assertStatus(401);
 });
 
 test('authenticated user can list all non-deleted projects including archived', function () {
@@ -24,7 +24,7 @@ test('authenticated user can list all non-deleted projects including archived', 
     $deletedProject = Project::factory()->create(['name' => 'Deleted Project Gamma']);
     $deletedProject->delete();
 
-    $response = $this->getJson('/api/v1/projects');
+    $response = $this->getJson(route('api.v1.projects.index'));
 
     $response->assertOk()
         ->assertJsonStructure([
@@ -61,23 +61,23 @@ test('project listing search and status filtering work correctly', function () {
     Project::factory()->create(['name' => 'Legacy System', 'status' => ProjectStatus::ARCHIVED]);
 
     // Search filter
-    $searchRes = $this->getJson('/api/v1/projects?search=Mobile');
+    $searchRes = $this->getJson(route('api.v1.projects.index', ['search' => 'Mobile']));
     $searchRes->assertOk();
     expect($searchRes->json('data'))->toHaveCount(1)
         ->and($searchRes->json('data.0.name'))->toBe('Mobile App iOS');
 
     // Status filter: active
-    $activeRes = $this->getJson('/api/v1/projects?status=active');
+    $activeRes = $this->getJson(route('api.v1.projects.index', ['status' => 'active']));
     $activeRes->assertOk();
     expect(collect($activeRes->json('data'))->pluck('status')->unique()->all())->toBe(['active']);
 
     // Status filter: done
-    $doneRes = $this->getJson('/api/v1/projects?status=done');
+    $doneRes = $this->getJson(route('api.v1.projects.index', ['status' => 'done']));
     $doneRes->assertOk();
     expect(collect($doneRes->json('data'))->pluck('status')->unique()->all())->toBe(['done']);
 
     // Status filter: all
-    $allRes = $this->getJson('/api/v1/projects?status=all');
+    $allRes = $this->getJson(route('api.v1.projects.index', ['status' => 'all']));
     $allRes->assertOk();
     expect(count($allRes->json('data')))->toBeGreaterThanOrEqual(3);
 });
@@ -90,7 +90,7 @@ test('project listing sorts by priority in business order (high -> medium -> low
     $high = Project::factory()->create(['name' => 'High Priority', 'priority' => ProjectPriority::HIGH]);
     $medium = Project::factory()->create(['name' => 'Medium Priority', 'priority' => ProjectPriority::MEDIUM]);
 
-    $response = $this->getJson('/api/v1/projects?sort=priority');
+    $response = $this->getJson(route('api.v1.projects.index', ['sort' => 'priority']));
     $response->assertOk();
 
     $priorities = collect($response->json('data'))->pluck('priority')->all();
@@ -114,7 +114,7 @@ test('project details returns required schema and computes timeline progress cor
 
     $project->members()->attach($user->id, ['role' => ProjectRole::PROJECT_MANAGER->value]);
 
-    $response = $this->getJson("/api/v1/projects/{$project->id}");
+    $response = $this->getJson(route('api.v1.projects.show', $project));
 
     $response->assertOk()
         ->assertJsonStructure([
@@ -172,7 +172,7 @@ test('project details supports filtering members by team_id', function () {
     ]);
     $team1->members()->attach($user1->id, ['role_title' => 'Lead Dev']);
 
-    $response = $this->getJson("/api/v1/projects/{$project->id}?team_id={$team1->id}");
+    $response = $this->getJson(route('api.v1.projects.show', ['project' => $project, 'team_id' => $team1->id]));
 
     $response->assertOk();
     $members = $response->json('data.members');
@@ -185,7 +185,7 @@ test('project details supports filtering members by team_id', function () {
     $otherProject = Project::factory()->create();
     $otherTeam = ProjectTeam::factory()->create(['project_id' => $otherProject->id]);
 
-    $invalidRes = $this->getJson("/api/v1/projects/{$project->id}?team_id={$otherTeam->id}");
+    $invalidRes = $this->getJson(route('api.v1.projects.show', ['project' => $project, 'team_id' => $otherTeam->id]));
     $invalidRes->assertStatus(422)
         ->assertJsonPath('error.code', 'team_not_in_project');
 });

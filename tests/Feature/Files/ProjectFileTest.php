@@ -27,7 +27,7 @@ beforeEach(function () {
 });
 
 test('unauthenticated user receives 401 on files endpoints', function () {
-    $this->getJson("/api/v1/projects/{$this->project->id}/files")
+    $this->getJson(route('api.v1.projects.files.index', $this->project))
         ->assertStatus(401);
 });
 
@@ -47,7 +47,7 @@ test('authenticated active user can list project files with recent_files and pag
     }
 
     $response = $this->actingAs($this->outsider)
-        ->getJson("/api/v1/projects/{$this->project->id}/files?per_page=2")
+        ->getJson(route('api.v1.projects.files.index', ['project' => $this->project, 'per_page' => 2]))
         ->assertStatus(200)
         ->assertJsonStructure([
             'data' => [
@@ -109,7 +109,7 @@ test('file search works across display name and original filename', function () 
     ]);
 
     $this->actingAs($this->pm)
-        ->getJson("/api/v1/projects/{$this->project->id}/files?search=Blueprint")
+        ->getJson(route('api.v1.projects.files.index', ['project' => $this->project, 'search' => 'Blueprint']))
         ->assertStatus(200)
         ->assertJsonCount(1, 'data.all_files')
         ->assertJsonPath('data.all_files.0.name', 'Architecture Blueprint');
@@ -119,7 +119,7 @@ test('file upload succeeds with custom display name', function () {
     $uploadedFile = UploadedFile::fake()->create('project_doc.pdf', 500, 'application/pdf');
 
     $response = $this->actingAs($this->member)
-        ->postJson("/api/v1/projects/{$this->project->id}/files", [
+        ->postJson(route('api.v1.projects.files.store', $this->project), [
             'file' => $uploadedFile,
             'name' => 'My Custom Specification',
         ])
@@ -141,7 +141,7 @@ test('file upload defaults to original filename without extension when name is o
     $uploadedFile = UploadedFile::fake()->create('annual_financial_audit.docx', 1200, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
 
     $this->actingAs($this->member)
-        ->postJson("/api/v1/projects/{$this->project->id}/files", [
+        ->postJson(route('api.v1.projects.files.store', $this->project), [
             'file' => $uploadedFile,
         ])
         ->assertStatus(201)
@@ -154,7 +154,7 @@ test('uploading file over 20 MB fails validation with 422', function () {
     $largeFile = UploadedFile::fake()->create('large_video.mp4', 25600, 'video/mp4');
 
     $this->actingAs($this->member)
-        ->postJson("/api/v1/projects/{$this->project->id}/files", [
+        ->postJson(route('api.v1.projects.files.store', $this->project), [
             'file' => $largeFile,
         ])
         ->assertStatus(422);
@@ -166,7 +166,7 @@ test('uploading file to archived project fails with 422', function () {
     $uploadedFile = UploadedFile::fake()->create('doc.pdf', 100, 'application/pdf');
 
     $this->actingAs($this->pm)
-        ->postJson("/api/v1/projects/{$this->project->id}/files", [
+        ->postJson(route('api.v1.projects.files.store', $this->project), [
             'file' => $uploadedFile,
         ])
         ->assertStatus(422);
@@ -189,7 +189,7 @@ test('file download succeeds with original filename and headers', function () {
     ]);
 
     $response = $this->actingAs($this->outsider)
-        ->get("/api/v1/projects/{$this->project->id}/files/{$file->id}/download")
+        ->get(route('api.v1.projects.files.download', [$this->project, $file]))
         ->assertStatus(200);
 
     $response->assertHeader('content-disposition', 'attachment; filename=Real_Specification.pdf');
@@ -209,7 +209,7 @@ test('download rejects a file belonging to another project with 404', function (
     ]);
 
     $this->actingAs($this->pm)
-        ->getJson("/api/v1/projects/{$this->project->id}/files/{$file->id}/download")
+        ->getJson(route('api.v1.projects.files.download', [$this->project, $file]))
         ->assertStatus(404);
 });
 
@@ -226,7 +226,7 @@ test('downloading file when physical file is missing returns 404', function () {
     ]);
 
     $this->actingAs($this->pm)
-        ->getJson("/api/v1/projects/{$this->project->id}/files/{$file->id}/download")
+        ->getJson(route('api.v1.projects.files.download', [$this->project, $file]))
         ->assertStatus(404);
 });
 
@@ -246,7 +246,7 @@ test('file deletion by uploader succeeds', function () {
     ]);
 
     $this->actingAs($this->member)
-        ->deleteJson("/api/v1/projects/{$this->project->id}/files/{$file->id}")
+        ->deleteJson(route('api.v1.projects.files.destroy', [$this->project, $file]))
         ->assertStatus(200);
 
     $this->assertSoftDeleted('project_files', ['id' => $file->id]);
@@ -269,7 +269,7 @@ test('file deletion by project manager succeeds', function () {
     ]);
 
     $this->actingAs($this->pm)
-        ->deleteJson("/api/v1/projects/{$this->project->id}/files/{$file->id}")
+        ->deleteJson(route('api.v1.projects.files.destroy', [$this->project, $file]))
         ->assertStatus(200);
 
     $this->assertSoftDeleted('project_files', ['id' => $file->id]);
@@ -288,7 +288,7 @@ test('file deletion by unrelated user fails with 403', function () {
     ]);
 
     $this->actingAs($this->outsider)
-        ->deleteJson("/api/v1/projects/{$this->project->id}/files/{$file->id}")
+        ->deleteJson(route('api.v1.projects.files.destroy', [$this->project, $file]))
         ->assertStatus(403);
 });
 
@@ -307,6 +307,6 @@ test('file deletion from archived project fails with 422', function () {
     $this->project->update(['status' => ProjectStatus::ARCHIVED, 'archived_at' => now()]);
 
     $this->actingAs($this->pm)
-        ->deleteJson("/api/v1/projects/{$this->project->id}/files/{$file->id}")
+        ->deleteJson(route('api.v1.projects.files.destroy', [$this->project, $file]))
         ->assertStatus(422);
 });

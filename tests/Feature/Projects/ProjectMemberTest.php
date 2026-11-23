@@ -14,7 +14,7 @@ test('project manager can add a member to the project', function () {
     $project = Project::factory()->active()->create();
     $project->members()->attach($pm->id, ['role' => ProjectRole::PROJECT_MANAGER->value]);
 
-    $response = $this->postJson("/api/v1/projects/{$project->id}/members", [
+    $response = $this->postJson(route('api.v1.projects.members.store', $project), [
         'user_id' => $newMember->id,
         'role' => 'member',
     ]);
@@ -34,7 +34,7 @@ test('project manager can add multiple project managers to the project', functio
     $project = Project::factory()->active()->create();
     $project->members()->attach($pm1->id, ['role' => ProjectRole::PROJECT_MANAGER->value]);
 
-    $response = $this->postJson("/api/v1/projects/{$project->id}/members", [
+    $response = $this->postJson(route('api.v1.projects.members.store', $project), [
         'user_id' => $pm2->id,
         'role' => 'project_manager',
     ]);
@@ -54,7 +54,7 @@ test('adding duplicate member to project is rejected', function () {
     $project->members()->attach($pm->id, ['role' => ProjectRole::PROJECT_MANAGER->value]);
     $project->members()->attach($member->id, ['role' => ProjectRole::MEMBER->value]);
 
-    $response = $this->postJson("/api/v1/projects/{$project->id}/members", [
+    $response = $this->postJson(route('api.v1.projects.members.store', $project), [
         'user_id' => $member->id,
         'role' => 'member',
     ]);
@@ -71,7 +71,7 @@ test('cannot add a suspended user to a project', function () {
     $project = Project::factory()->active()->create();
     $project->members()->attach($pm->id, ['role' => ProjectRole::PROJECT_MANAGER->value]);
 
-    $response = $this->postJson("/api/v1/projects/{$project->id}/members", [
+    $response = $this->postJson(route('api.v1.projects.members.store', $project), [
         'user_id' => $suspendedUser->id,
         'role' => 'member',
     ]);
@@ -92,13 +92,13 @@ test('project manager can promote member and demote when multiple PMs exist', fu
     $project->members()->attach($member->id, ['role' => ProjectRole::MEMBER->value]);
 
     // Promote member to PM
-    $promoteRes = $this->patchJson("/api/v1/projects/{$project->id}/members/{$member->id}", [
+    $promoteRes = $this->patchJson(route('api.v1.projects.members.update', [$project, $member]), [
         'role' => 'project_manager',
     ]);
     $promoteRes->assertOk()->assertJsonPath('data.role', 'project_manager');
 
     // Demote pm2 to member (allowed because pm1 and member are still active PMs)
-    $demoteRes = $this->patchJson("/api/v1/projects/{$project->id}/members/{$pm2->id}", [
+    $demoteRes = $this->patchJson(route('api.v1.projects.members.update', [$project, $pm2]), [
         'role' => 'member',
     ]);
     $demoteRes->assertOk()->assertJsonPath('data.role', 'member');
@@ -111,7 +111,7 @@ test('last project manager cannot be demoted', function () {
     $project = Project::factory()->active()->create();
     $project->members()->attach($solePm->id, ['role' => ProjectRole::PROJECT_MANAGER->value]);
 
-    $response = $this->patchJson("/api/v1/projects/{$project->id}/members/{$solePm->id}", [
+    $response = $this->patchJson(route('api.v1.projects.members.update', [$project, $solePm]), [
         'role' => 'member',
     ]);
 
@@ -126,7 +126,7 @@ test('last project manager cannot be removed from project', function () {
     $project = Project::factory()->active()->create();
     $project->members()->attach($solePm->id, ['role' => ProjectRole::PROJECT_MANAGER->value]);
 
-    $response = $this->deleteJson("/api/v1/projects/{$project->id}/members/{$solePm->id}");
+    $response = $this->deleteJson(route('api.v1.projects.members.destroy', [$project, $solePm]));
 
     $response->assertStatus(422)
         ->assertJsonPath('error.message', __('projects.cannot_remove_last_project_manager'));
@@ -150,7 +150,7 @@ test('removing a project member removes team memberships and clears team leader 
     expect($team->hasMember($member))->toBeTrue()
         ->and((int) $team->fresh()->leader_id)->toBe($member->id);
 
-    $response = $this->deleteJson("/api/v1/projects/{$project->id}/members/{$member->id}");
+    $response = $this->deleteJson(route('api.v1.projects.members.destroy', [$project, $member]));
     $response->assertOk();
 
     // Check project membership deleted
@@ -171,7 +171,7 @@ test('member management operations are blocked for archived projects', function 
     $project = Project::factory()->archived()->create();
     $project->members()->attach($pm->id, ['role' => ProjectRole::PROJECT_MANAGER->value]);
 
-    $response = $this->postJson("/api/v1/projects/{$project->id}/members", [
+    $response = $this->postJson(route('api.v1.projects.members.store', $project), [
         'user_id' => $user->id,
         'role' => 'member',
     ]);
@@ -190,7 +190,7 @@ test('suspended project manager can be removed when an active PM remains', funct
     $project->members()->attach($suspendedPm->id, ['role' => ProjectRole::PROJECT_MANAGER->value]);
 
     // Removing the suspended PM should succeed because activePm remains
-    $response = $this->deleteJson("/api/v1/projects/{$project->id}/members/{$suspendedPm->id}");
+    $response = $this->deleteJson(route('api.v1.projects.members.destroy', [$project, $suspendedPm]));
 
     $response->assertOk();
     expect($project->isMemberOfProject($suspendedPm))->toBeFalse();
@@ -207,7 +207,7 @@ test('suspended project manager cannot be demoted when active PM count would dro
     $project->members()->attach($member->id, ['role' => ProjectRole::MEMBER->value]);
 
     // Demoting the only active PM should be rejected
-    $response = $this->patchJson("/api/v1/projects/{$project->id}/members/{$activePm->id}", [
+    $response = $this->patchJson(route('api.v1.projects.members.update', [$project, $activePm]), [
         'role' => 'member',
     ]);
 

@@ -13,7 +13,7 @@ test('forgot password sends notification for registered user', function () {
         'email' => 'member@example.com',
     ]);
 
-    $response = $this->postJson('/api/v1/auth/forgot-password', [
+    $response = $this->postJson(route('api.v1.auth.forgot-password'), [
         'email' => 'member@example.com',
     ]);
 
@@ -26,7 +26,7 @@ test('forgot password sends notification for registered user', function () {
 test('forgot password returns generic response without enumeration for unknown email', function () {
     Notification::fake();
 
-    $response = $this->postJson('/api/v1/auth/forgot-password', [
+    $response = $this->postJson(route('api.v1.auth.forgot-password'), [
         'email' => 'unknown@example.com',
     ]);
 
@@ -50,7 +50,7 @@ test('reset password successfully updates password and revokes all active tokens
 
     $resetToken = Password::broker()->createToken($user);
 
-    $response = $this->postJson('/api/v1/auth/reset-password', [
+    $response = $this->postJson(route('api.v1.auth.reset-password'), [
         'email' => 'user@example.com',
         'token' => $resetToken,
         'password' => 'BrandNewPass#2026',
@@ -71,7 +71,7 @@ test('reset password successfully updates password and revokes all active tokens
 
     // Old tokens cannot authenticate
     $checkAuth = $this->withHeader('Authorization', 'Bearer '.$token1)
-        ->getJson('/api/v1/auth/me');
+        ->getJson(route('api.v1.auth.me'));
     $checkAuth->assertStatus(401);
 });
 
@@ -83,7 +83,7 @@ test('reset password fails if token was already used', function () {
     $resetToken = Password::broker()->createToken($user);
 
     // First reset: success
-    $this->postJson('/api/v1/auth/reset-password', [
+    $this->postJson(route('api.v1.auth.reset-password'), [
         'email' => 'user@example.com',
         'token' => $resetToken,
         'password' => 'NewPassWord#123',
@@ -91,7 +91,7 @@ test('reset password fails if token was already used', function () {
     ])->assertOk();
 
     // Second attempt with same token: rejected
-    $replayResponse = $this->postJson('/api/v1/auth/reset-password', [
+    $replayResponse = $this->postJson(route('api.v1.auth.reset-password'), [
         'email' => 'user@example.com',
         'token' => $resetToken,
         'password' => 'AnotherPass#123',
@@ -109,7 +109,7 @@ test('reset password enforces password policy', function () {
 
     $resetToken = Password::broker()->createToken($user);
 
-    $response = $this->postJson('/api/v1/auth/reset-password', [
+    $response = $this->postJson(route('api.v1.auth.reset-password'), [
         'email' => 'user@example.com',
         'token' => $resetToken,
         'password' => 'short',
@@ -128,7 +128,7 @@ test('forgot password normalizes email casing before lookup', function () {
     $user = User::factory()->create(['email' => 'member@example.com']);
 
     // Send with uppercase characters — should still match and send notification
-    $response = $this->postJson('/api/v1/auth/forgot-password', [
+    $response = $this->postJson(route('api.v1.auth.forgot-password'), [
         'email' => 'MEMBER@EXAMPLE.COM',
     ]);
 
@@ -147,7 +147,7 @@ test('reset password normalizes email casing before token lookup', function () {
     $resetToken = Password::broker()->createToken($user);
 
     // Submit with mixed-case email — the normalized value must match the stored token
-    $response = $this->postJson('/api/v1/auth/reset-password', [
+    $response = $this->postJson(route('api.v1.auth.reset-password'), [
         'email' => 'USER@EXAMPLE.COM',
         'token' => $resetToken,
         'password' => 'NewPassWord#2026',
@@ -165,7 +165,7 @@ test('reset password is rejected for suspended accounts without leaking account 
 
     $resetToken = Password::broker()->createToken($user);
 
-    $response = $this->postJson('/api/v1/auth/reset-password', [
+    $response = $this->postJson(route('api.v1.auth.reset-password'), [
         'email' => 'suspended@example.com',
         'token' => $resetToken,
         'password' => 'BrandNew#2026',

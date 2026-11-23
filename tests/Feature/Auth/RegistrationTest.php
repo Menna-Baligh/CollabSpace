@@ -5,7 +5,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
 test('a new user can register successfully and receive a 24-hour token', function () {
-    $response = $this->postJson('/api/v1/auth/register', [
+    $response = $this->postJson(route('api.v1.auth.register'), [
         'name' => 'John Doe',
         'email' => 'john@example.com',
         'password' => 'SecurePass#2026',
@@ -41,7 +41,7 @@ test('a new user can register successfully and receive a 24-hour token', functio
 });
 
 test('registration ignores client-supplied system_role and always assigns user role', function () {
-    $response = $this->postJson('/api/v1/auth/register', [
+    $response = $this->postJson(route('api.v1.auth.register'), [
         'name' => 'Hacker Admin',
         'email' => 'hacker@example.com',
         'password' => 'SecurePass#2026',
@@ -55,7 +55,7 @@ test('registration ignores client-supplied system_role and always assigns user r
 });
 
 test('registration does not require password_confirmation', function () {
-    $response = $this->postJson('/api/v1/auth/register', [
+    $response = $this->postJson(route('api.v1.auth.register'), [
         'name' => 'Jane Doe',
         'email' => 'jane@example.com',
         'password' => 'SecurePass#2026',
@@ -65,7 +65,7 @@ test('registration does not require password_confirmation', function () {
 });
 
 test('registration fails when required fields are missing', function () {
-    $response = $this->postJson('/api/v1/auth/register', []);
+    $response = $this->postJson(route('api.v1.auth.register'), []);
 
     $response->assertStatus(422)
         ->assertJsonPath('error.code', 'validation_failed');
@@ -76,7 +76,7 @@ test('registration fails when required fields are missing', function () {
 test('registration fails with duplicate email', function () {
     User::factory()->create(['email' => 'existing@example.com']);
 
-    $response = $this->postJson('/api/v1/auth/register', [
+    $response = $this->postJson(route('api.v1.auth.register'), [
         'name' => 'Test User',
         'email' => 'existing@example.com',
         'password' => 'SecurePass#2026',
@@ -89,7 +89,7 @@ test('registration fails with duplicate email', function () {
 });
 
 test('registration fails when password violates policy', function (string $weakPassword) {
-    $response = $this->postJson('/api/v1/auth/register', [
+    $response = $this->postJson(route('api.v1.auth.register'), [
         'name' => 'Test User',
         'email' => 'test@example.com',
         'password' => $weakPassword,
@@ -109,7 +109,7 @@ test('registration fails when password violates policy', function (string $weakP
 
 test('registration returns localized Arabic response when requested', function () {
     $response = $this->withHeader('Accept-Language', 'ar')
-        ->postJson('/api/v1/auth/register', [
+        ->postJson(route('api.v1.auth.register'), [
             'name' => 'أحمد علي',
             'email' => 'ahmed@example.com',
             'password' => 'SecurePass#2026',

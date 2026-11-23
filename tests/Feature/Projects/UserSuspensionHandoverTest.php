@@ -15,19 +15,19 @@ test('mandatory requirement: only system administrators can suspend users (regul
     $project->members()->attach($pm->id, ['role' => ProjectRole::PROJECT_MANAGER->value]);
 
     // 1. Unauthenticated -> 401
-    $this->postJson("/api/v1/users/{$targetUser->id}/suspend")->assertStatus(401);
+    $this->postJson(route('api.v1.users.suspend', $targetUser))->assertStatus(401);
 
     // 2. Regular user -> 403
     Sanctum::actingAs($regularUser);
-    $this->postJson("/api/v1/users/{$targetUser->id}/suspend")->assertStatus(403);
+    $this->postJson(route('api.v1.users.suspend', $targetUser))->assertStatus(403);
 
     // 3. Project manager who is not admin -> 403
     Sanctum::actingAs($pm);
-    $this->postJson("/api/v1/users/{$targetUser->id}/suspend")->assertStatus(403);
+    $this->postJson(route('api.v1.users.suspend', $targetUser))->assertStatus(403);
 
     // 4. System administrator -> 200
     Sanctum::actingAs($admin);
-    $response = $this->postJson("/api/v1/users/{$targetUser->id}/suspend");
+    $response = $this->postJson(route('api.v1.users.suspend', $targetUser));
     $response->assertOk()
         ->assertJsonPath('meta.message', __('projects.user_suspended_successfully'));
 
@@ -44,7 +44,7 @@ test('suspending normal user revokes all sanctum tokens', function () {
     expect($targetUser->tokens()->count())->toBe(2);
 
     Sanctum::actingAs($admin);
-    $response = $this->postJson("/api/v1/users/{$targetUser->id}/suspend");
+    $response = $this->postJson(route('api.v1.users.suspend', $targetUser));
     $response->assertOk();
 
     // Check tokens revoked
@@ -53,7 +53,7 @@ test('suspending normal user revokes all sanctum tokens', function () {
     // Attempting to access protected endpoint with old token is rejected
     $this->app['auth']->forgetGuards();
     $this->withHeader('Authorization', 'Bearer '.$token1)
-        ->getJson('/api/v1/auth/me')
+        ->getJson(route('api.v1.auth.me'))
         ->assertStatus(401);
 });
 
@@ -68,7 +68,7 @@ test('suspending sole project manager without handovers returns 422 with list of
     $project2->members()->attach($solePm->id, ['role' => ProjectRole::PROJECT_MANAGER->value]);
 
     Sanctum::actingAs($admin);
-    $response = $this->postJson("/api/v1/users/{$solePm->id}/suspend");
+    $response = $this->postJson(route('api.v1.users.suspend', $solePm));
 
     $response->assertStatus(422)
         ->assertJsonPath('error.code', 'handover_required')
@@ -99,7 +99,7 @@ test('handover promotes replacement to project manager, demotes suspended user, 
     $project->members()->attach($replacement->id, ['role' => ProjectRole::MEMBER->value]);
 
     Sanctum::actingAs($admin);
-    $response = $this->postJson("/api/v1/users/{$solePm->id}/suspend", [
+    $response = $this->postJson(route('api.v1.users.suspend', $solePm), [
         'handovers' => [
             [
                 'project_id' => $project->id,
@@ -131,7 +131,7 @@ test('handover fails and rolls back completely if replacement user is suspended'
     $project->members()->attach($solePm->id, ['role' => ProjectRole::PROJECT_MANAGER->value]);
 
     Sanctum::actingAs($admin);
-    $response = $this->postJson("/api/v1/users/{$solePm->id}/suspend", [
+    $response = $this->postJson(route('api.v1.users.suspend', $solePm), [
         'handovers' => [
             [
                 'project_id' => $project->id,
@@ -159,7 +159,7 @@ test('handover rejects duplicate or unexpected project IDs', function () {
     Sanctum::actingAs($admin);
 
     // Duplicate project in handovers
-    $dupResponse = $this->postJson("/api/v1/users/{$solePm->id}/suspend", [
+    $dupResponse = $this->postJson(route('api.v1.users.suspend', $solePm), [
         'handovers' => [
             ['project_id' => $project->id, 'replacement_user_id' => $replacement->id],
             ['project_id' => $project->id, 'replacement_user_id' => $replacement->id],
@@ -169,7 +169,7 @@ test('handover rejects duplicate or unexpected project IDs', function () {
 
     // Unexpected project ID
     $otherProject = Project::factory()->active()->create();
-    $mismatchResponse = $this->postJson("/api/v1/users/{$solePm->id}/suspend", [
+    $mismatchResponse = $this->postJson(route('api.v1.users.suspend', $solePm), [
         'handovers' => [
             ['project_id' => $otherProject->id, 'replacement_user_id' => $replacement->id],
         ],

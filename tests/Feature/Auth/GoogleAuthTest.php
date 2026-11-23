@@ -8,7 +8,7 @@ use Laravel\Socialite\Two\GoogleProvider;
 use Laravel\Socialite\Two\User as SocialiteUser;
 
 test('google redirect endpoint returns google oauth url as json', function () {
-    $response = $this->getJson('/api/v1/auth/google/redirect');
+    $response = $this->getJson(route('api.v1.auth.google.redirect'));
 
     $response->assertOk()
         ->assertJsonStructure([
@@ -22,7 +22,7 @@ test('google redirect endpoint returns google oauth url as json', function () {
 });
 
 test('google callback with invalid or missing state redirects to frontend with error', function () {
-    $response = $this->get('/api/v1/auth/google/callback?state=invalid_state&code=test_code');
+    $response = $this->get(route('api.v1.auth.google.callback', ['state' => 'invalid_state', 'code' => 'test_code']));
 
     $response->assertRedirect(config('services.frontend.auth_callback_url').'#error=invalid_oauth_state');
 });
@@ -40,7 +40,7 @@ test('google callback with unverified google email redirects with error', functi
 
     Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
 
-    $response = $this->get("/api/v1/auth/google/callback?state={$state}&code=sample_code");
+    $response = $this->get(route('api.v1.auth.google.callback', ['state' => $state, 'code' => 'sample_code']));
 
     $response->assertRedirect(config('services.frontend.auth_callback_url').'#error=oauth_unverified_email');
 });
@@ -65,7 +65,7 @@ test('google callback for existing unlinked email account rejects login to preve
 
     Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
 
-    $response = $this->get("/api/v1/auth/google/callback?state={$state}&code=sample_code");
+    $response = $this->get(route('api.v1.auth.google.callback', ['state' => $state, 'code' => 'sample_code']));
 
     $response->assertRedirect(config('services.frontend.auth_callback_url').'#error=oauth_account_exists_unlinked');
 });
@@ -86,7 +86,7 @@ test('google callback for brand new user creates account with null password and 
 
     Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
 
-    $response = $this->get("/api/v1/auth/google/callback?state={$state}&code=sample_code");
+    $response = $this->get(route('api.v1.auth.google.callback', ['state' => $state, 'code' => 'sample_code']));
 
     $response->assertRedirect();
     $targetUrl = $response->headers->get('Location');
@@ -125,7 +125,7 @@ test('google callback for already linked active user generates exchange code', f
 
     Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
 
-    $response = $this->get("/api/v1/auth/google/callback?state={$state}&code=sample_code");
+    $response = $this->get(route('api.v1.auth.google.callback', ['state' => $state, 'code' => 'sample_code']));
 
     $response->assertRedirect();
     expect($response->headers->get('Location'))->toContain('#code=');
@@ -153,7 +153,7 @@ test('google callback for already linked suspended user is rejected', function (
 
     Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
 
-    $response = $this->get("/api/v1/auth/google/callback?state={$state}&code=sample_code");
+    $response = $this->get(route('api.v1.auth.google.callback', ['state' => $state, 'code' => 'sample_code']));
 
     $response->assertRedirect(config('services.frontend.auth_callback_url').'#error=account_suspended');
 });
@@ -163,7 +163,7 @@ test('exchange endpoint exchanges valid code for a 24-hour Bearer token', functi
     $service = app(GoogleOAuthService::class);
     $code = $service->generateExchangeCode($user);
 
-    $response = $this->postJson('/api/v1/auth/google/exchange', [
+    $response = $this->postJson(route('api.v1.auth.google.exchange'), [
         'code' => $code,
     ]);
 
@@ -188,17 +188,17 @@ test('exchange endpoint rejects replaying or reusing the same code', function ()
     $code = $service->generateExchangeCode($user);
 
     // First use: success
-    $firstResponse = $this->postJson('/api/v1/auth/google/exchange', ['code' => $code]);
+    $firstResponse = $this->postJson(route('api.v1.auth.google.exchange'), ['code' => $code]);
     $firstResponse->assertOk();
 
     // Replay attempt: rejected
-    $replayResponse = $this->postJson('/api/v1/auth/google/exchange', ['code' => $code]);
+    $replayResponse = $this->postJson(route('api.v1.auth.google.exchange'), ['code' => $code]);
     $replayResponse->assertStatus(401)
         ->assertJsonPath('error.code', 'invalid_exchange_code');
 });
 
 test('exchange endpoint rejects invalid or expired code', function () {
-    $response = $this->postJson('/api/v1/auth/google/exchange', [
+    $response = $this->postJson(route('api.v1.auth.google.exchange'), [
         'code' => 'nonexistent_code',
     ]);
 

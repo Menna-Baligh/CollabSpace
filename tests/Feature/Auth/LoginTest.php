@@ -9,7 +9,7 @@ test('user can log in without remember me and receive a 24-hour token', function
         'password' => Hash::make('Password@12345'),
     ]);
 
-    $response = $this->postJson('/api/v1/auth/login', [
+    $response = $this->postJson(route('api.v1.auth.login'), [
         'email' => 'user@example.com',
         'password' => 'Password@12345',
         'remember' => false,
@@ -34,7 +34,7 @@ test('user can log in with remember me and receive a 30-day token', function () 
         'password' => Hash::make('Password@12345'),
     ]);
 
-    $response = $this->postJson('/api/v1/auth/login', [
+    $response = $this->postJson(route('api.v1.auth.login'), [
         'email' => 'remember@example.com',
         'password' => 'Password@12345',
         'remember' => true,
@@ -54,14 +54,14 @@ test('expired token is strictly rejected by protected route', function () {
     $expiredToken = $user->createToken('expired_token', ['*'], now()->subHour())->plainTextToken;
 
     $response = $this->withHeader('Authorization', 'Bearer '.$expiredToken)
-        ->getJson('/api/v1/auth/me');
+        ->getJson(route('api.v1.auth.me'));
 
     $response->assertStatus(401)
         ->assertJsonPath('error.code', 'unauthenticated');
 });
 
 test('login fails with generic 401 when email does not exist', function () {
-    $response = $this->postJson('/api/v1/auth/login', [
+    $response = $this->postJson(route('api.v1.auth.login'), [
         'email' => 'nonexistent@example.com',
         'password' => 'Password@12345',
     ]);
@@ -76,7 +76,7 @@ test('login fails with generic 401 when password is wrong', function () {
         'password' => Hash::make('Password@12345'),
     ]);
 
-    $response = $this->postJson('/api/v1/auth/login', [
+    $response = $this->postJson(route('api.v1.auth.login'), [
         'email' => 'test@example.com',
         'password' => 'WrongPassword#123',
     ]);
@@ -90,7 +90,7 @@ test('login fails with generic 401 for Google-only account without local passwor
         'email' => 'googleonly@example.com',
     ]);
 
-    $response = $this->postJson('/api/v1/auth/login', [
+    $response = $this->postJson(route('api.v1.auth.login'), [
         'email' => 'googleonly@example.com',
         'password' => 'Password@12345',
     ]);
@@ -105,7 +105,7 @@ test('login fails with generic 401 for suspended account', function () {
         'password' => Hash::make('Password@12345'),
     ]);
 
-    $response = $this->postJson('/api/v1/auth/login', [
+    $response = $this->postJson(route('api.v1.auth.login'), [
         'email' => 'suspended@example.com',
         'password' => 'Password@12345',
     ]);
@@ -115,7 +115,7 @@ test('login fails with generic 401 for suspended account', function () {
 });
 
 test('login validation fails with missing fields', function () {
-    $response = $this->postJson('/api/v1/auth/login', []);
+    $response = $this->postJson(route('api.v1.auth.login'), []);
 
     $response->assertStatus(422)
         ->assertJsonPath('error.code', 'validation_failed');
@@ -125,13 +125,13 @@ test('login validation fails with missing fields', function () {
 
 test('login endpoint is rate limited after 5 failed attempts', function () {
     for ($i = 0; $i < 5; $i++) {
-        $this->postJson('/api/v1/auth/login', [
+        $this->postJson(route('api.v1.auth.login'), [
             'email' => 'ratelimit@example.com',
             'password' => 'WrongPassword#123',
         ]);
     }
 
-    $response = $this->postJson('/api/v1/auth/login', [
+    $response = $this->postJson(route('api.v1.auth.login'), [
         'email' => 'ratelimit@example.com',
         'password' => 'WrongPassword#123',
     ]);

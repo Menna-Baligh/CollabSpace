@@ -16,7 +16,7 @@ test('any authenticated user can list project teams', function () {
         'name' => 'Design Team',
     ]);
 
-    $response = $this->getJson("/api/v1/projects/{$project->id}/teams");
+    $response = $this->getJson(route('api.v1.projects.teams.index', $project));
 
     $response->assertOk()
         ->assertJsonStructure([
@@ -44,7 +44,7 @@ test('project manager can create a team with leader automatically added to team 
     $project->members()->attach($pm->id, ['role' => ProjectRole::PROJECT_MANAGER->value]);
     $project->members()->attach($leader->id, ['role' => ProjectRole::MEMBER->value]);
 
-    $response = $this->postJson("/api/v1/projects/{$project->id}/teams", [
+    $response = $this->postJson(route('api.v1.projects.teams.store', $project), [
         'name' => 'Backend Engineers',
         'color' => '#3B82F6',
         'leader_id' => $leader->id,
@@ -68,7 +68,7 @@ test('team leader must already be a member of the project', function () {
     $project = Project::factory()->active()->create();
     $project->members()->attach($pm->id, ['role' => ProjectRole::PROJECT_MANAGER->value]);
 
-    $response = $this->postJson("/api/v1/projects/{$project->id}/teams", [
+    $response = $this->postJson(route('api.v1.projects.teams.store', $project), [
         'name' => 'Frontend Team',
         'leader_id' => $outsider->id,
     ]);
@@ -88,25 +88,25 @@ test('mandatory requirement: team names must be unique within the same project, 
     $project2->members()->attach($pm->id, ['role' => ProjectRole::PROJECT_MANAGER->value]);
 
     // 1. Create team in Project 1
-    $res1 = $this->postJson("/api/v1/projects/{$project1->id}/teams", ['name' => 'Core Team']);
+    $res1 = $this->postJson(route('api.v1.projects.teams.store', $project1), ['name' => 'Core Team']);
     $res1->assertCreated();
 
     // 2. Creating another team with the SAME name in Project 1 fails
-    $resDuplicate = $this->postJson("/api/v1/projects/{$project1->id}/teams", ['name' => 'Core Team']);
+    $resDuplicate = $this->postJson(route('api.v1.projects.teams.store', $project1), ['name' => 'Core Team']);
     $resDuplicate->assertStatus(422)
         ->assertJsonStructure(['error' => ['details' => ['name']]]);
 
     // 3. Creating team with the SAME name in Project 2 succeeds
-    $res2 = $this->postJson("/api/v1/projects/{$project2->id}/teams", ['name' => 'Core Team']);
+    $res2 = $this->postJson(route('api.v1.projects.teams.store', $project2), ['name' => 'Core Team']);
     $res2->assertCreated();
 
     // 4. Renaming a team to another existing team name in the same project fails
     $team2 = ProjectTeam::factory()->create(['project_id' => $project1->id, 'name' => 'QA Team']);
-    $renameFail = $this->patchJson("/api/v1/projects/{$project1->id}/teams/{$team2->id}", ['name' => 'Core Team']);
+    $renameFail = $this->patchJson(route('api.v1.projects.teams.update', [$project1, $team2]), ['name' => 'Core Team']);
     $renameFail->assertStatus(422);
 
     // 5. Renaming a team to an available name succeeds
-    $renameSuccess = $this->patchJson("/api/v1/projects/{$project1->id}/teams/{$team2->id}", ['name' => 'Quality Assurance Team']);
+    $renameSuccess = $this->patchJson(route('api.v1.projects.teams.update', [$project1, $team2]), ['name' => 'Quality Assurance Team']);
     $renameSuccess->assertOk()
         ->assertJsonPath('data.name', 'Quality Assurance Team');
 });
@@ -129,7 +129,7 @@ test('project manager can change team leader while previous leader remains in te
     $team->members()->attach($oldLeader->id);
 
     // Change leader to newLeader
-    $response = $this->patchJson("/api/v1/projects/{$project->id}/teams/{$team->id}", [
+    $response = $this->patchJson(route('api.v1.projects.teams.update', [$project, $team]), [
         'leader_id' => $newLeader->id,
         'leader_role_title' => 'New Lead',
     ]);
@@ -156,14 +156,14 @@ test('project manager can add and remove team members, clearing leader if leader
     $team = ProjectTeam::factory()->create(['project_id' => $project->id]);
 
     // Outsider cannot be added to team
-    $failRes = $this->postJson("/api/v1/projects/{$project->id}/teams/{$team->id}/members", [
+    $failRes = $this->postJson(route('api.v1.projects.teams.members.store', [$project, $team]), [
         'user_id' => $outsider->id,
     ]);
     $failRes->assertStatus(422)
         ->assertJsonPath('error.message', __('projects.team_member_must_be_project_member'));
 
     // Project member can be added
-    $addRes = $this->postJson("/api/v1/projects/{$project->id}/teams/{$team->id}/members", [
+    $addRes = $this->postJson(route('api.v1.projects.teams.members.store', [$project, $team]), [
         'user_id' => $member->id,
         'role_title' => 'Frontend Dev',
     ]);
@@ -172,7 +172,7 @@ test('project manager can add and remove team members, clearing leader if leader
         ->assertJsonPath('data.role_title', 'Frontend Dev');
 
     // Duplicate add is rejected
-    $dupRes = $this->postJson("/api/v1/projects/{$project->id}/teams/{$team->id}/members", [
+    $dupRes = $this->postJson(route('api.v1.projects.teams.members.store', [$project, $team]), [
         'user_id' => $member->id,
     ]);
     $dupRes->assertStatus(422);
@@ -181,7 +181,7 @@ test('project manager can add and remove team members, clearing leader if leader
     $team->update(['leader_id' => $member->id]);
     expect((int) $team->fresh()->leader_id)->toBe($member->id);
 
-    $removeRes = $this->deleteJson("/api/v1/projects/{$project->id}/teams/{$team->id}/members/{$member->id}");
+    $removeRes = $this->deleteJson(route('api.v1.projects.teams.members.destroy', [$project, $team, $member]));
     $removeRes->assertOk();
 
     expect($team->hasMember($member))->toBeFalse()
@@ -198,7 +198,7 @@ test('team operations reject team IDs belonging to another project', function ()
     $project2 = Project::factory()->active()->create();
     $team2 = ProjectTeam::factory()->create(['project_id' => $project2->id]);
 
-    $response = $this->patchJson("/api/v1/projects/{$project1->id}/teams/{$team2->id}", [
+    $response = $this->patchJson(route('api.v1.projects.teams.update', [$project1, $team2]), [
         'name' => 'Cross Project Exploit',
     ]);
 

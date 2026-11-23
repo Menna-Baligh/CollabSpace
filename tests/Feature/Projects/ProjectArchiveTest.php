@@ -13,7 +13,7 @@ test('project manager can archive a project, setting status to archived and arch
     $project = Project::factory()->active()->create();
     $project->members()->attach($pm->id, ['role' => ProjectRole::PROJECT_MANAGER->value]);
 
-    $response = $this->patchJson("/api/v1/projects/{$project->id}/archive");
+    $response = $this->patchJson(route('api.v1.projects.archive', $project));
 
     $response->assertOk()
         ->assertJsonPath('data.status', 'archived')
@@ -31,7 +31,7 @@ test('project manager can unarchive an archived project, restoring active status
     $project = Project::factory()->archived()->create();
     $project->members()->attach($pm->id, ['role' => ProjectRole::PROJECT_MANAGER->value]);
 
-    $response = $this->patchJson("/api/v1/projects/{$project->id}/unarchive");
+    $response = $this->patchJson(route('api.v1.projects.unarchive', $project));
 
     $response->assertOk()
         ->assertJsonPath('data.status', 'active')
@@ -53,7 +53,7 @@ test('repeated archive calls preserve original archived_at timestamp and load me
     ]);
     $project->members()->attach($pm->id, ['role' => ProjectRole::PROJECT_MANAGER->value]);
 
-    $response = $this->patchJson("/api/v1/projects/{$project->id}/archive");
+    $response = $this->patchJson(route('api.v1.projects.archive', $project));
 
     $response->assertOk()
         ->assertJsonPath('data.status', 'archived')
@@ -74,6 +74,6 @@ test('non-project-manager cannot archive or unarchive a project', function () {
 
     Sanctum::actingAs($nonPm);
 
-    $this->patchJson("/api/v1/projects/{$project->id}/archive")->assertStatus(403);
-    $this->patchJson("/api/v1/projects/{$project->id}/unarchive")->assertStatus(403);
+    $this->patchJson(route('api.v1.projects.archive', $project))->assertStatus(403);
+    $this->patchJson(route('api.v1.projects.unarchive', $project))->assertStatus(403);
 });

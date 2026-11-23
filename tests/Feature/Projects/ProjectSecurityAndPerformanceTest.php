@@ -20,7 +20,7 @@ test('cross-project ID manipulation is rejected on team and member endpoints', f
     $user2 = User::factory()->create();
 
     // Attempt to add member to team2 via project1 route URL
-    $response = $this->postJson("/api/v1/projects/{$project1->id}/teams/{$team2->id}/members", [
+    $response = $this->postJson(route('api.v1.projects.teams.members.store', [$project1, $team2]), [
         'user_id' => $user2->id,
     ]);
 
@@ -32,7 +32,7 @@ test('users cannot elevate system roles or inject unauthorized fields during pro
     $user = User::factory()->create(['system_role' => SystemRole::USER]);
     Sanctum::actingAs($user);
 
-    $response = $this->postJson('/api/v1/projects', [
+    $response = $this->postJson(route('api.v1.projects.store'), [
         'name' => 'Attempted Privilege Escalation',
         'system_role' => 'admin',
         'is_admin' => true,
@@ -52,7 +52,7 @@ test('suspended users cannot access project endpoints with existing tokens', fun
 
     // Verify token works initially
     $this->withHeader('Authorization', 'Bearer '.$token)
-        ->getJson('/api/v1/projects')
+        ->getJson(route('api.v1.projects.index'))
         ->assertOk();
 
     // Now suspend the user account
@@ -62,7 +62,7 @@ test('suspended users cannot access project endpoints with existing tokens', fun
 
     // Attempting to access project endpoints with old token is rejected by active.user middleware
     $response = $this->withHeader('Authorization', 'Bearer '.$token)
-        ->getJson('/api/v1/projects');
+        ->getJson(route('api.v1.projects.index'));
 
     $response->assertStatus(403)
         ->assertJsonPath('error.code', 'account_suspended');
@@ -83,7 +83,7 @@ test('project listing query execution count is bounded to prevent N+1 queries', 
 
     DB::enableQueryLog();
 
-    $response = $this->getJson('/api/v1/projects?per_page=10');
+    $response = $this->getJson(route('api.v1.projects.index', ['per_page' => 10]));
     $response->assertOk();
 
     $queries = DB::getQueryLog();
