@@ -5,14 +5,19 @@ namespace Database\Seeders;
 use App\Enums\ProjectPriority;
 use App\Enums\ProjectRole;
 use App\Enums\ProjectStatus;
+use App\Enums\ReportType;
 use App\Enums\SystemRole;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
+use App\Enums\UserActivityType;
+use App\Enums\UserAvailabilityStatus;
 use App\Models\Project;
 use App\Models\ProjectFile;
 use App\Models\ProjectTeam;
+use App\Models\Report;
 use App\Models\Task;
 use App\Models\User;
+use App\Models\UserActivity;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -49,6 +54,12 @@ class ProjectTeamSeeder extends Seeder
                 'system_role' => SystemRole::USER,
                 'email_verified_at' => now(),
                 'suspended_at' => null,
+                'job_title' => 'UI/UX Designer',
+                'years_of_experience' => 6,
+                'phone' => '+20 100 123 4567',
+                'bio' => 'Senior UI/UX Designer dedicated to building intuitive and clean user interfaces for web and mobile platforms.',
+                'hours_worked' => 120,
+                'availability_status' => UserAvailabilityStatus::AVAILABLE,
             ]
         );
 
@@ -408,6 +419,72 @@ class ProjectTeamSeeder extends Seeder
                 ]
             );
         }
+
+        // -------------------------------------------------------------
+        // 6. Seed Realistic Activities & Reports for Mohamed Salah
+        // -------------------------------------------------------------
+        $firstTask = Task::where('project_id', $alpha->id)->first();
+
+        // Activities
+        UserActivity::firstOrCreate(
+            [
+                'user_id' => $mohamed->id,
+                'action_type' => UserActivityType::TASK_COMPLETED,
+                'description' => 'Completed task: High-Fidelity Figma Wireframes',
+            ],
+            [
+                'subject_type' => $firstTask ? Task::class : null,
+                'subject_id' => $firstTask?->id,
+                'created_at' => now()->subHours(2),
+            ]
+        );
+
+        UserActivity::firstOrCreate(
+            [
+                'user_id' => $mohamed->id,
+                'action_type' => UserActivityType::FILE_UPLOADED,
+                'description' => 'Uploaded file: Brand Guidelines and UI Colors',
+            ],
+            [
+                'subject_type' => null,
+                'subject_id' => null,
+                'created_at' => now()->subHours(5),
+            ]
+        );
+
+        UserActivity::firstOrCreate(
+            [
+                'user_id' => $mohamed->id,
+                'action_type' => UserActivityType::TASK_UPDATED,
+                'description' => 'Updated task status: Dashboard Layout Design',
+            ],
+            [
+                'subject_type' => $firstTask ? Task::class : null,
+                'subject_id' => $firstTask?->id,
+                'created_at' => now()->subDay(),
+            ]
+        );
+
+        // Reports
+        Report::firstOrCreate(
+            [
+                'user_id' => $mohamed->id,
+                'report_type' => ReportType::PROJECT_PROGRESS,
+                'start_date' => now()->subDays(30)->toDateString(),
+                'end_date' => now()->toDateString(),
+            ],
+            [
+                'project_id' => $alpha->id,
+                'note' => 'Monthly progress evaluation for Project Alpha UI sprint.',
+                'summary_snapshot' => [
+                    'projects_evaluated' => 1,
+                    'projects_completed' => 0,
+                    'total_tasks_in_period' => 5,
+                    'completed_tasks_in_period' => 3,
+                    'completion_percentage' => 60,
+                ],
+            ]
+        );
     }
 
     /**
