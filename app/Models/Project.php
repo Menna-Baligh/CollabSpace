@@ -116,6 +116,16 @@ class Project extends Model
     }
 
     /**
+     * Reports associated with this project.
+     *
+     * @return HasMany<Report, $this>
+     */
+    public function reports(): HasMany
+    {
+        return $this->hasMany(Report::class);
+    }
+
+    /**
      * Determine if a given user is a member of this project.
      */
     public function hasMember(User|int $user): bool
