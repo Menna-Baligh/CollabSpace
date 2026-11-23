@@ -4,12 +4,14 @@ namespace App\Models;
 
 use App\Enums\ProjectRole;
 use App\Enums\SystemRole;
+use App\Enums\UserAvailabilityStatus;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -28,6 +30,13 @@ class User extends Authenticatable
         'password',
         'system_role',
         'suspended_at',
+        'avatar',
+        'phone',
+        'availability_status',
+        'job_title',
+        'years_of_experience',
+        'bio',
+        'hours_worked',
     ];
 
     /**
@@ -52,6 +61,9 @@ class User extends Authenticatable
             'password' => 'hashed',
             'system_role' => SystemRole::class,
             'suspended_at' => 'datetime',
+            'availability_status' => UserAvailabilityStatus::class,
+            'years_of_experience' => 'integer',
+            'hours_worked' => 'integer',
         ];
     }
 
@@ -164,6 +176,38 @@ class User extends Authenticatable
     public function uploadedFiles(): HasMany
     {
         return $this->hasMany(ProjectFile::class, 'uploaded_by');
+    }
+
+    /**
+     * Activities performed by the user.
+     *
+     * @return HasMany<UserActivity, $this>
+     */
+    public function activities(): HasMany
+    {
+        return $this->hasMany(UserActivity::class);
+    }
+
+    /**
+     * Reports submitted by the user.
+     *
+     * @return HasMany<Report, $this>
+     */
+    public function reports(): HasMany
+    {
+        return $this->hasMany(Report::class);
+    }
+
+    /**
+     * Get avatar public URL if avatar is set.
+     */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if (! $this->avatar) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->avatar);
     }
 
     /**
