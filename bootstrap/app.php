@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureAccountNotSuspended;
+use App\Http\Middleware\ForceJsonResponse;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -21,6 +22,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->redirectGuestsTo(fn () => null);
+
+        $middleware->api(prepend: [
+            ForceJsonResponse::class,
+        ]);
+
         $middleware->api(append: [
             SetLocale::class,
         ]);
