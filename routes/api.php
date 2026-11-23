@@ -7,10 +7,13 @@ use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\ProfileController;
 use App\Http\Controllers\Api\V1\Auth\RegisterController;
 use App\Http\Controllers\Api\V1\Auth\ResetPasswordController;
+use App\Http\Controllers\Api\V1\Files\ProjectFileController;
 use App\Http\Controllers\Api\V1\Projects\ProjectController;
 use App\Http\Controllers\Api\V1\Projects\ProjectMemberController;
 use App\Http\Controllers\Api\V1\Projects\ProjectTeamController;
 use App\Http\Controllers\Api\V1\Projects\TeamMemberController;
+use App\Http\Controllers\Api\V1\Tasks\GlobalTaskController;
+use App\Http\Controllers\Api\V1\Tasks\TaskController;
 use App\Http\Controllers\Api\V1\Users\UserSuspensionController;
 use Illuminate\Support\Facades\Route;
 
@@ -59,6 +62,24 @@ Route::prefix('v1')->group(function () {
         // Team Members
         Route::post('/projects/{project}/teams/{team}/members', [TeamMemberController::class, 'store']);
         Route::delete('/projects/{project}/teams/{team}/members/{user}', [TeamMemberController::class, 'destroy']);
+
+        // Global Tasks
+        Route::get('/tasks', [GlobalTaskController::class, 'index']);
+        Route::post('/tasks', [GlobalTaskController::class, 'store']);
+
+        // Project Tasks
+        Route::get('/projects/{project}/tasks', [TaskController::class, 'index']);
+        Route::post('/projects/{project}/tasks', [TaskController::class, 'store']);
+        Route::get('/projects/{project}/tasks/{task}', [TaskController::class, 'show']);
+        Route::patch('/projects/{project}/tasks/{task}', [TaskController::class, 'update']);
+        Route::patch('/projects/{project}/tasks/{task}/status', [TaskController::class, 'updateStatus']);
+        Route::delete('/projects/{project}/tasks/{task}', [TaskController::class, 'destroy']);
+
+        // Project Files
+        Route::get('/projects/{project}/files', [ProjectFileController::class, 'index']);
+        Route::post('/projects/{project}/files', [ProjectFileController::class, 'store']);
+        Route::get('/projects/{project}/files/{file}/download', [ProjectFileController::class, 'download']);
+        Route::delete('/projects/{project}/files/{file}', [ProjectFileController::class, 'destroy']);
 
         // User Suspension & PM Handover (System Administrator only)
         Route::post('/users/{user}/suspend', UserSuspensionController::class);

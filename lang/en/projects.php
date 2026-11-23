@@ -62,4 +62,25 @@ return [
     'unexpected_error_add_team_member' => 'An unexpected error occurred while adding the team member.',
     'unexpected_error_remove_team_member' => 'An unexpected error occurred while removing the team member.',
     'unexpected_error_suspend_user' => 'An unexpected error occurred while suspending the user.',
+
+    // Slice 3 Tasks
+    'task_created_successfully' => 'Task created successfully.',
+    'task_updated_successfully' => 'Task updated successfully.',
+    'task_status_updated_successfully' => 'Task status updated successfully.',
+    'task_deleted_successfully' => 'Task deleted successfully.',
+    'task_not_found' => 'Task not found.',
+    'task_not_in_project' => 'Task does not belong to this project.',
+    'unexpected_error_create_task' => 'An unexpected error occurred while creating the task.',
+    'unexpected_error_update_task' => 'An unexpected error occurred while updating the task.',
+    'unexpected_error_delete_task' => 'An unexpected error occurred while deleting the task.',
+
+    // Slice 3 Files
+    'file_uploaded_successfully' => 'File uploaded successfully.',
+    'file_deleted_successfully' => 'File deleted successfully.',
+    'file_not_found' => 'File not found.',
+    'file_not_in_project' => 'File does not belong to this project.',
+    'file_not_found_on_disk' => 'The requested file could not be found on storage.',
+    'unexpected_error_upload_file' => 'An unexpected error occurred while uploading the file.',
+    'unexpected_error_download_file' => 'An unexpected error occurred while downloading the file.',
+    'unexpected_error_delete_file' => 'An unexpected error occurred while deleting the file.',
 ];

@@ -62,4 +62,25 @@ return [
     'unexpected_error_add_team_member' => 'حدث خطأ غير متوقع أثناء إضافة عضو الفريق.',
     'unexpected_error_remove_team_member' => 'حدث خطأ غير متوقع أثناء إزالة عضو الفريق.',
     'unexpected_error_suspend_user' => 'حدث خطأ غير متوقع أثناء تعليق حساب المستخدم.',
+
+    // Slice 3 Tasks
+    'task_created_successfully' => 'تم إنشاء المهمة بنجاح.',
+    'task_updated_successfully' => 'تم تحديث المهمة بنجاح.',
+    'task_status_updated_successfully' => 'تم تحديث حالة المهمة بنجاح.',
+    'task_deleted_successfully' => 'تم حذف المهمة بنجاح.',
+    'task_not_found' => 'المهمة غير موجودة.',
+    'task_not_in_project' => 'المهمة لا تنتمي إلى هذا المشروع.',
+    'unexpected_error_create_task' => 'حدث خطأ غير متوقع أثناء إنشاء المهمة.',
+    'unexpected_error_update_task' => 'حدث خطأ غير متوقع أثناء تحديث المهمة.',
+    'unexpected_error_delete_task' => 'حدث خطأ غير متوقع أثناء حذف المهمة.',
+
+    // Slice 3 Files
+    'file_uploaded_successfully' => 'تم رفع الملف بنجاح.',
+    'file_deleted_successfully' => 'تم حذف الملف بنجاح.',
+    'file_not_found' => 'الملف غير موجود.',
+    'file_not_in_project' => 'الملف لا ينتمي إلى هذا المشروع.',
+    'file_not_found_on_disk' => 'الملف المطلوب غير موجود على وحدة التخزين.',
+    'unexpected_error_upload_file' => 'حدث خطأ غير متوقع أثناء رفع الملف.',
+    'unexpected_error_download_file' => 'حدث خطأ غير متوقع أثناء تحميل الملف.',
+    'unexpected_error_delete_file' => 'حدث خطأ غير متوقع أثناء حذف الملف.',
 ];
