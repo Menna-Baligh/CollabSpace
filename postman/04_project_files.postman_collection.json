@@ -1,0 +1,168 @@
+{
+	"info": {
+		"_postman_id": "b3c97a21-4f18-4b72-9b25-8d5e1f72a912",
+		"name": "CollabSpace - 04. Project Files",
+		"description": "Slice 3: Project Files Module API endpoints for CollabSpace RESTful API.\nIncludes Project Files management (List Recent & All Files, Upload Multipart File, Secure Authenticated Download, Delete File).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "1|sanctumPlainTextTokenHere",
+			"type": "string"
+		},
+		{
+			"key": "project_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "file_id",
+			"value": "1",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. List Project Files",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/projects/{{project_id}}/files?search=Report&per_page=15",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "projects", "{{project_id}}", "files"],
+					"query": [
+						{
+							"key": "search",
+							"value": "Report",
+							"description": "Search by display name or original filename"
+						},
+						{
+							"key": "per_page",
+							"value": "15",
+							"description": "Pagination limit (max 100)"
+						}
+					]
+				},
+				"description": "Returns two sections: recent_files (latest 3 files uploaded) and all_files (paginated list sorted newest first with search)."
+			},
+			"response": []
+		},
+		{
+			"name": "2. Upload Project File",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"description": "Required file (max 20 MB)"
+						},
+						{
+							"key": "name",
+							"value": "Custom Display Name",
+							"type": "text",
+							"description": "Optional display name. Defaults to original filename without extension."
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/projects/{{project_id}}/files",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "projects", "{{project_id}}", "files"]
+				},
+				"description": "Upload a file to the project. Maximum 20MB. Stored with safe unique filename on storage."
+			},
+			"response": []
+		},
+		{
+			"name": "3. Download Project File",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/projects/{{project_id}}/files/{{file_id}}/download",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "projects", "{{project_id}}", "files", "{{file_id}}", "download"]
+				},
+				"description": "Secure download endpoint. Streams file with original filename. Verifies physical file existence."
+			},
+			"response": []
+		},
+		{
+			"name": "4. Delete Project File",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept-Language",
+						"value": "en"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/projects/{{project_id}}/files/{{file_id}}",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "projects", "{{project_id}}", "files", "{{file_id}}"]
+				},
+				"description": "Soft deletes the database record and cleans up physical storage. Allowed for Project Managers and the uploader."
+			},
+			"response": []
+		}
+	]
+}

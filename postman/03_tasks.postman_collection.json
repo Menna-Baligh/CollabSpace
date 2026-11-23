@@ -1,0 +1,344 @@
+{
+	"info": {
+		"_postman_id": "e4f82a19-5d21-4b10-8b17-7a2e5d99b110",
+		"name": "CollabSpace - 03. Tasks",
+		"description": "Slice 3: Tasks Module API endpoints for CollabSpace RESTful API.\nIncludes Project Kanban Board (List, Create, Show, Update, Status Drag & Drop, Delete) and Global Tasks Page (List across projects, Create Global Task).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "1|sanctumPlainTextTokenHere",
+			"type": "string"
+		},
+		{
+			"key": "project_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "task_id",
+			"value": "1",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Project Tasks",
+			"item": [
+				{
+					"name": "1. List Project Tasks (Kanban)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/{{project_id}}/tasks?search=Design&status=todo,in_progress&priority=high&team_id=1&assignee_id=2",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "{{project_id}}", "tasks"],
+							"query": [
+								{
+									"key": "search",
+									"value": "Design",
+									"description": "Search by task title"
+								},
+								{
+									"key": "status",
+									"value": "todo,in_progress",
+									"description": "Filter by task status: todo, in_progress, in_review, completed"
+								},
+								{
+									"key": "priority",
+									"value": "high",
+									"description": "Filter by priority: high, medium, low"
+								},
+								{
+									"key": "team_id",
+									"value": "1",
+									"description": "Filter by project team"
+								},
+								{
+									"key": "assignee_id",
+									"value": "2",
+									"description": "Filter by assigned user"
+								}
+							]
+						},
+						"description": "List tasks for a specific project grouped into the four Kanban columns: todo, in_progress, in_review, completed."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Create Project Task",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Implement User Authentication\",\n    \"description\": \"Setup Sanctum token auth with refresh mechanism\",\n    \"status\": \"todo\",\n    \"priority\": \"high\",\n    \"progress\": 0,\n    \"due_date\": \"2026-12-15\",\n    \"project_team_id\": 1,\n    \"reviewer_id\": 2,\n    \"assignee_ids\": [2, 3]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/{{project_id}}/tasks",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "{{project_id}}", "tasks"]
+						},
+						"description": "Create a new task within a project. Assignees and reviewer must belong to the same project."
+					},
+					"response": []
+				},
+				{
+					"name": "3. Show Project Task",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/{{project_id}}/tasks/{{task_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "{{project_id}}", "tasks", "{{task_id}}"]
+						},
+						"description": "Get detailed information about a specific task."
+					},
+					"response": []
+				},
+				{
+					"name": "4. Update Project Task",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Updated Task Title\",\n    \"description\": \"Updated description notes\",\n    \"priority\": \"medium\",\n    \"progress\": 60,\n    \"due_date\": \"2026-12-20\",\n    \"project_team_id\": 1,\n    \"reviewer_id\": 2,\n    \"assignee_ids\": [2]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/{{project_id}}/tasks/{{task_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "{{project_id}}", "tasks", "{{task_id}}"]
+						},
+						"description": "Update specific task attributes. Assignee list syncs atomically."
+					},
+					"response": []
+				},
+				{
+					"name": "5. Change Task Status & Position (Drag and Drop)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"completed\",\n    \"position\": 0\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/{{project_id}}/tasks/{{task_id}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "{{project_id}}", "tasks", "{{task_id}}", "status"]
+						},
+						"description": "Change task Kanban status and position. Setting completed forces progress to 100."
+					},
+					"response": []
+				},
+				{
+					"name": "6. Delete Project Task",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/projects/{{project_id}}/tasks/{{task_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "projects", "{{project_id}}", "tasks", "{{task_id}}"]
+						},
+						"description": "Soft delete a task. Allowed for Project Managers and the task creator."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Global Tasks",
+			"item": [
+				{
+					"name": "1. List Global Tasks",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/tasks?scope=my_tasks&search=Design&project_id=1&status=in_progress&priority=high",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "tasks"],
+							"query": [
+								{
+									"key": "scope",
+									"value": "my_tasks",
+									"description": "Scope: my_tasks (assigned or reviewer) or all"
+								},
+								{
+									"key": "search",
+									"value": "Design",
+									"description": "Search by task title"
+								},
+								{
+									"key": "project_id",
+									"value": "1",
+									"description": "Filter by project ID"
+								},
+								{
+									"key": "status",
+									"value": "in_progress",
+									"description": "Filter by task status"
+								},
+								{
+									"key": "priority",
+									"value": "high",
+									"description": "Filter by task priority"
+								}
+							]
+						},
+						"description": "List tasks across all visible projects grouped by Kanban column with project metadata."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Create Global Task",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"project_id\": 1,\n    \"title\": \"Global UI Audit\",\n    \"description\": \"Comprehensive audit of UI accessibility across components\",\n    \"status\": \"todo\",\n    \"priority\": \"medium\",\n    \"progress\": 0,\n    \"due_date\": \"2026-12-28\",\n    \"project_team_id\": 1,\n    \"reviewer_id\": 2,\n    \"assignee_ids\": [2, 3]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/tasks",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "tasks"]
+						},
+						"description": "Create a task from the navbar/global screen, supplying project_id."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
