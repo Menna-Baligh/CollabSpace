@@ -6,12 +6,17 @@ use App\Enums\ProjectPriority;
 use App\Enums\ProjectRole;
 use App\Enums\ProjectStatus;
 use App\Enums\SystemRole;
+use App\Enums\TaskPriority;
+use App\Enums\TaskStatus;
 use App\Models\Project;
+use App\Models\ProjectFile;
 use App\Models\ProjectTeam;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class ProjectTeamSeeder extends Seeder
 {
@@ -266,6 +271,143 @@ class ProjectTeamSeeder extends Seeder
         );
         $this->syncProjectMember($cloudMigration->id, $mohamed->id, ProjectRole::PROJECT_MANAGER->value);
         $this->syncProjectMember($cloudMigration->id, $ahmed->id, ProjectRole::MEMBER->value);
+
+        // -------------------------------------------------------------
+        // 6. Slice 3 Demo Data: Tasks for Alpha Project
+        // -------------------------------------------------------------
+        $task1 = Task::updateOrCreate(
+            ['project_id' => $alpha->id, 'title' => 'Design System Tokens'],
+            [
+                'project_team_id' => $uiUx->id,
+                'created_by' => $mohamed->id,
+                'reviewer_id' => $sara->id,
+                'description' => 'Establish unified color palette, typography and component spacing tokens.',
+                'status' => TaskStatus::COMPLETED,
+                'priority' => TaskPriority::HIGH,
+                'progress' => 100,
+                'due_date' => '2025-11-01',
+                'position' => 0,
+            ]
+        );
+        $task1->assignees()->sync([$mohanad->id, $ali->id]);
+
+        $task2 = Task::updateOrCreate(
+            ['project_id' => $alpha->id, 'title' => 'Figma UI Components & Interactive Prototypes'],
+            [
+                'project_team_id' => $uiUx->id,
+                'created_by' => $mohanad->id,
+                'reviewer_id' => $mohamed->id,
+                'description' => 'Build high-fidelity wireframes and prototype user flows for dashboard screens.',
+                'status' => TaskStatus::IN_REVIEW,
+                'priority' => TaskPriority::HIGH,
+                'progress' => 85,
+                'due_date' => '2025-11-15',
+                'position' => 0,
+            ]
+        );
+        $task2->assignees()->sync([$sara->id]);
+
+        $task3 = Task::updateOrCreate(
+            ['project_id' => $alpha->id, 'title' => 'Implement REST API Auth & Teams Endpoints'],
+            [
+                'project_team_id' => $backend->id,
+                'created_by' => $mohamed->id,
+                'reviewer_id' => $mohanad->id,
+                'description' => 'Develop Sanctum authentication, Google OAuth, and Project/Team CRUD endpoints.',
+                'status' => TaskStatus::IN_PROGRESS,
+                'priority' => TaskPriority::MEDIUM,
+                'progress' => 60,
+                'due_date' => '2025-11-25',
+                'position' => 0,
+            ]
+        );
+        $task3->assignees()->sync([$khalid->id, $ahmed->id]);
+
+        $task4 = Task::updateOrCreate(
+            ['project_id' => $alpha->id, 'title' => 'Setup React Component Library & Tailwind'],
+            [
+                'project_team_id' => $frontend->id,
+                'created_by' => $mohanad->id,
+                'reviewer_id' => null,
+                'description' => 'Configure Vite, TailwindCSS, Lucide icons, and base UI primitives.',
+                'status' => TaskStatus::TODO,
+                'priority' => TaskPriority::MEDIUM,
+                'progress' => 0,
+                'due_date' => '2025-12-05',
+                'position' => 0,
+            ]
+        );
+        $task4->assignees()->sync([$ali->id]);
+
+        $task5 = Task::updateOrCreate(
+            ['project_id' => $alpha->id, 'title' => 'Market Research and Competitor Analysis'],
+            [
+                'project_team_id' => $marketing->id,
+                'created_by' => $mohamed->id,
+                'reviewer_id' => $sara->id,
+                'description' => 'Analyze competitive collaboration platforms and draft feature differentiation doc.',
+                'status' => TaskStatus::TODO,
+                'priority' => TaskPriority::LOW,
+                'progress' => 0,
+                'due_date' => '2025-12-10',
+                'position' => 1,
+            ]
+        );
+        $task5->assignees()->sync([$mohanad->id, $sara->id]);
+
+        // -------------------------------------------------------------
+        // 7. Slice 3 Demo Data: Files for Alpha Project
+        // -------------------------------------------------------------
+        $storageDisk = Storage::disk('public');
+        $directory = "projects/{$alpha->id}/files";
+
+        $sampleFiles = [
+            [
+                'name' => 'Project Requirements Specification',
+                'original_name' => 'Alpha_Requirements_v1.0.pdf',
+                'file_name' => 'alpha_requirements.pdf',
+                'mime_type' => 'application/pdf',
+                'extension' => 'pdf',
+                'content' => "%PDF-1.4\n1 0 obj\n<< /Title (Alpha Requirements) >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF",
+                'uploader' => $mohamed,
+            ],
+            [
+                'name' => 'Database Architecture Diagram',
+                'original_name' => 'schema_design.png',
+                'file_name' => 'schema_design.png',
+                'mime_type' => 'image/png',
+                'extension' => 'png',
+                'content' => base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='),
+                'uploader' => $khalid,
+            ],
+            [
+                'name' => 'Brand Guidelines and UI Colors',
+                'original_name' => 'brand_guidelines.pdf',
+                'file_name' => 'brand_guidelines.pdf',
+                'mime_type' => 'application/pdf',
+                'extension' => 'pdf',
+                'content' => "%PDF-1.4\n1 0 obj\n<< /Title (Brand Guidelines) >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF",
+                'uploader' => $sara,
+            ],
+        ];
+
+        foreach ($sampleFiles as $sample) {
+            $filePath = "{$directory}/{$sample['file_name']}";
+            $storageDisk->put($filePath, $sample['content']);
+            $size = strlen($sample['content']);
+
+            ProjectFile::updateOrCreate(
+                ['project_id' => $alpha->id, 'name' => $sample['name']],
+                [
+                    'uploaded_by' => $sample['uploader']->id,
+                    'original_name' => $sample['original_name'],
+                    'file_path' => $filePath,
+                    'mime_type' => $sample['mime_type'],
+                    'extension' => $sample['extension'],
+                    'size_bytes' => $size,
+                ]
+            );
+        }
     }
 
     /**
