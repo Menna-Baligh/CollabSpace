@@ -1,0 +1,212 @@
+{
+	"info": {
+		"_postman_id": "d82b4981-348e-49b8-8092-23c8a98f1211",
+		"name": "CollabSpace - 06. Profile & Settings",
+		"description": "Slice 6: User Profile & Settings Module API endpoints for CollabSpace RESTful API.\nIncludes Profile Overview (basic info, stats, about, recent activities), Profile Tasks (todo & done), Profile Files (user uploads and project files), Profile Settings (view & patch), and Avatar Upload.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "1|sanctumPlainTextTokenHere",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Profile Overview & Tabs",
+			"item": [
+				{
+					"name": "1. Get Profile Overview",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "profile"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Get Profile Tasks (Todo & Done)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/profile/tasks",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "profile", "tasks"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Get Profile Files",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/profile/files?per_page=15",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "profile", "files"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Settings",
+			"item": [
+				{
+					"name": "1. Get Editable Settings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/profile/settings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "profile", "settings"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Update Settings",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Mohamed Salah\",\n  \"email\": \"mohamed.salah@collabspace.com\",\n  \"phone\": \"+20 100 123 4567\",\n  \"availability_status\": \"available\",\n  \"job_title\": \"UI/UX Designer\",\n  \"years_of_experience\": 6,\n  \"bio\": \"Senior UI/UX Designer dedicated to building intuitive and clean user interfaces for web and mobile platforms.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/profile/settings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "profile", "settings"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Upload Profile Avatar",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "avatar",
+									"type": "file",
+									"description": "Image file (jpg, jpeg, png, webp) max 5MB"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/profile/avatar",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "profile", "avatar"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

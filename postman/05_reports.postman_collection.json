@@ -1,0 +1,246 @@
+{
+	"info": {
+		"_postman_id": "c71a3992-127b-4029-a1b7-a87d00f684c3",
+		"name": "CollabSpace - 05. Reports & Analytics",
+		"description": "Slice 5: Reports & Analytics Module API endpoints for CollabSpace RESTful API.\nIncludes Analytics KPIs & Charts (Task Completion vs Deadline, Projects Progress, Worker Activity Rate), Submitting Detailed Reports, and Paginated Reports History.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "1|sanctumPlainTextTokenHere",
+			"type": "string"
+		},
+		{
+			"key": "project_id",
+			"value": "1",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Analytics",
+			"item": [
+				{
+					"name": "1. Get Analytics (Overview - Monthly)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reports/analytics?period=monthly",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reports", "analytics"],
+							"query": [
+								{
+									"key": "period",
+									"value": "monthly",
+									"description": "Filter period for worker activity rate (monthly, weekly, yearly)"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Get Analytics (Project Filtered - Weekly)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reports/analytics?project_id={{project_id}}&period=weekly",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reports", "analytics"],
+							"query": [
+								{
+									"key": "project_id",
+									"value": "{{project_id}}",
+									"description": "Filter analytics by visible project ID"
+								},
+								{
+									"key": "period",
+									"value": "weekly",
+									"description": "Weekly period (last 7 days)"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Get Analytics (Yearly Period)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reports/analytics?period=yearly",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reports", "analytics"],
+							"query": [
+								{
+									"key": "period",
+									"value": "yearly",
+									"description": "Yearly period (last 5 years)"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Reports",
+			"item": [
+				{
+					"name": "1. List Submitted Reports",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reports?report_type=project_progress&per_page=15",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reports"],
+							"query": [
+								{
+									"key": "report_type",
+									"value": "project_progress",
+									"description": "Filter by report type: project_progress, tasks_summary, team_activity, worker_performance"
+								},
+								{
+									"key": "per_page",
+									"value": "15"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Submit Detailed Report (Valid)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"report_type\": \"project_progress\",\n  \"note\": \"Comprehensive sprint review for Project Alpha.\",\n  \"start_date\": \"2026-10-01\",\n  \"end_date\": \"2026-10-31\",\n  \"project_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reports",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reports"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Submit Detailed Report (Invalid Date Range - 422)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"report_type\": \"tasks_summary\",\n  \"note\": \"Invalid date test\",\n  \"start_date\": \"2026-11-30\",\n  \"end_date\": \"2026-11-01\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reports",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reports"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
