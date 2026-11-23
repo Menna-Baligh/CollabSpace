@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Api\V1\Files;
 
+use App\Enums\UserActivityType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Files\StoreProjectFileRequest;
 use App\Http\Resources\ProjectFileResource;
 use App\Models\Project;
 use App\Models\ProjectFile;
 use App\Services\ProjectFileService;
+use App\Services\UserActivityService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -48,7 +50,7 @@ class ProjectFileController extends Controller
     /**
      * Upload a new file to the project.
      */
-    public function store(StoreProjectFileRequest $request, Project $project, ProjectFileService $service): JsonResponse
+    public function store(StoreProjectFileRequest $request, Project $project, ProjectFileService $service, UserActivityService $activityService): JsonResponse
     {
         $this->authorize('upload', [ProjectFile::class, $project]);
 
@@ -58,6 +60,13 @@ class ProjectFileController extends Controller
                 $request->user(),
                 $request->file('file'),
                 $request->safe(['name'])
+            );
+
+            $activityService->log(
+                $request->user(),
+                UserActivityType::FILE_UPLOADED,
+                "Uploaded file: {$file->name}",
+                $file
             );
 
             return $this->successResponse(

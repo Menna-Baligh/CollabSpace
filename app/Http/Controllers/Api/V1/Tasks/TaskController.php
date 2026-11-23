@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\V1\Tasks;
 
+use App\Enums\TaskStatus;
+use App\Enums\UserActivityType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tasks\StoreTaskRequest;
 use App\Http\Requests\Tasks\UpdateTaskRequest;
@@ -10,6 +12,7 @@ use App\Http\Resources\TaskResource;
 use App\Models\Project;
 use App\Models\Task;
 use App\Services\TaskService;
+use App\Services\UserActivityService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -113,7 +116,7 @@ class TaskController extends Controller
     /**
      * Update a task.
      */
-    public function update(UpdateTaskRequest $request, Project $project, Task $task, TaskService $service): JsonResponse
+    public function update(UpdateTaskRequest $request, Project $project, Task $task, TaskService $service, UserActivityService $activityService): JsonResponse
     {
         if ((int) $task->project_id !== (int) $project->id) {
             return $this->failureResponse(
@@ -126,7 +129,25 @@ class TaskController extends Controller
         $this->authorize('update', $task);
 
         try {
+            $oldStatus = $task->status instanceof \BackedEnum ? $task->status->value : $task->status;
             $updated = $service->updateTask($task, $request->validated());
+            $newStatus = $updated->status instanceof \BackedEnum ? $updated->status->value : $updated->status;
+
+            if ($newStatus === TaskStatus::COMPLETED->value && $oldStatus !== TaskStatus::COMPLETED->value) {
+                $activityService->log(
+                    $request->user(),
+                    UserActivityType::TASK_COMPLETED,
+                    "Completed task: {$updated->title}",
+                    $updated
+                );
+            } else {
+                $activityService->log(
+                    $request->user(),
+                    UserActivityType::TASK_UPDATED,
+                    "Updated task: {$updated->title}",
+                    $updated
+                );
+            }
 
             return $this->successResponse(
                 new TaskResource($updated),
@@ -158,7 +179,7 @@ class TaskController extends Controller
     /**
      * Change task status and position (Kanban drag and drop).
      */
-    public function updateStatus(UpdateTaskStatusRequest $request, Project $project, Task $task, TaskService $service): JsonResponse
+    public function updateStatus(UpdateTaskStatusRequest $request, Project $project, Task $task, TaskService $service, UserActivityService $activityService): JsonResponse
     {
         if ((int) $task->project_id !== (int) $project->id) {
             return $this->failureResponse(
@@ -171,7 +192,25 @@ class TaskController extends Controller
         $this->authorize('updateStatus', $task);
 
         try {
+            $oldStatus = $task->status instanceof \BackedEnum ? $task->status->value : $task->status;
             $updated = $service->updateTaskStatus($task, $request->validated());
+            $newStatus = $updated->status instanceof \BackedEnum ? $updated->status->value : $updated->status;
+
+            if ($newStatus === TaskStatus::COMPLETED->value && $oldStatus !== TaskStatus::COMPLETED->value) {
+                $activityService->log(
+                    $request->user(),
+                    UserActivityType::TASK_COMPLETED,
+                    "Completed task: {$updated->title}",
+                    $updated
+                );
+            } else {
+                $activityService->log(
+                    $request->user(),
+                    UserActivityType::TASK_UPDATED,
+                    "Updated task status: {$updated->title}",
+                    $updated
+                );
+            }
 
             return $this->successResponse(
                 new TaskResource($updated),
