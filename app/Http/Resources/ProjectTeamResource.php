@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\TaskStatus;
 use App\Models\ProjectTeam;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -42,15 +43,32 @@ class ProjectTeamResource extends JsonResource
             $membersData = $this->members->map(function ($member) {
                 $isLeader = (int) $this->leader_id === (int) $member->id;
 
-                return new TeamMemberResource($member, $isLeader);
+                return new TeamMemberResource(
+                    $member,
+                    $isLeader,
+                    $member->assigned_tasks_count ?? null,
+                    $member->completed_tasks_count ?? null
+                );
             });
         }
+
+        $totalTeamTasks = (int) ($this->tasks_count ?? 0);
+        $completedTeamTasks = (int) ($this->completed_tasks_count ?? 0);
+
+        if (! isset($this->tasks_count) && $this->relationLoaded('tasks')) {
+            $totalTeamTasks = $this->tasks->count();
+            $completedTeamTasks = $this->tasks->where('status', TaskStatus::COMPLETED)->count();
+        }
+
+        $completionPercentage = $totalTeamTasks > 0
+            ? (int) round(($completedTeamTasks / $totalTeamTasks) * 100)
+            : 0;
 
         return [
             'id' => $this->id,
             'name' => $this->name,
             'color' => $this->color,
-            'completion_percentage' => 0,
+            'completion_percentage' => $completionPercentage,
             'leader' => $leaderData,
             'members' => $membersData,
         ];

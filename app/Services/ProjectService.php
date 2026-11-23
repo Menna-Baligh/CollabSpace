@@ -27,7 +27,7 @@ class ProjectService
             ->with([
                 'members' => fn ($q) => $q->select('users.id', 'users.name')->limit(4),
             ])
-            ->withCount('members');
+            ->withCount(['members', 'files']);
 
         // Search by name
         if (! empty($filters['search'])) {

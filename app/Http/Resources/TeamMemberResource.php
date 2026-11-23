@@ -16,10 +16,26 @@ class TeamMemberResource extends JsonResource
      */
     protected ?bool $isLeaderOverride;
 
-    public function __construct($resource, ?bool $isLeader = null)
-    {
+    /**
+     * Optional assigned tasks count override.
+     */
+    protected ?int $assignedTasksCountOverride;
+
+    /**
+     * Optional completed tasks count override.
+     */
+    protected ?int $completedTasksCountOverride;
+
+    public function __construct(
+        $resource,
+        ?bool $isLeader = null,
+        ?int $assignedTasksCount = null,
+        ?int $completedTasksCount = null
+    ) {
         parent::__construct($resource);
         $this->isLeaderOverride = $isLeader;
+        $this->assignedTasksCountOverride = $assignedTasksCount;
+        $this->completedTasksCountOverride = $completedTasksCount;
     }
 
     /**
@@ -32,14 +48,20 @@ class TeamMemberResource extends JsonResource
         $roleTitle = $this->pivot?->role_title;
         $isLeader = $this->isLeaderOverride ?? (bool) ($this->is_leader ?? false);
 
+        $assignedTasksCount = $this->assignedTasksCountOverride
+            ?? (int) ($this->assigned_tasks_count ?? 0);
+
+        $completedTasksCount = $this->completedTasksCountOverride
+            ?? (int) ($this->completed_tasks_count ?? 0);
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'avatar' => null,
             'role_title' => $roleTitle,
             'is_leader' => $isLeader,
-            'assigned_tasks_count' => 0,
-            'completed_tasks_count' => 0,
+            'assigned_tasks_count' => $assignedTasksCount,
+            'completed_tasks_count' => $completedTasksCount,
         ];
     }
 }

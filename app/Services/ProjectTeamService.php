@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\TaskStatus;
 use App\Models\Project;
 use App\Models\ProjectTeam;
 use App\Models\User;
@@ -18,12 +19,49 @@ class ProjectTeamService
      */
     public function listTeams(Project $project): Collection
     {
-        return ProjectTeam::where('project_id', $project->id)
+        $teams = ProjectTeam::where('project_id', $project->id)
             ->with([
                 'leader',
                 'members' => fn ($q) => $q->select('users.id', 'users.name'),
             ])
+            ->withCount([
+                'tasks',
+                'tasks as completed_tasks_count' => fn ($q) => $q->where('status', TaskStatus::COMPLETED->value),
+            ])
             ->get();
+
+        // Calculate member-level task metrics within this project and team efficiently
+        // Aggregating task_user pivot joined with tasks
+        $teamIds = $teams->pluck('id')->all();
+
+        if (! empty($teamIds)) {
+            $memberMetrics = DB::table('task_user')
+                ->join('tasks', 'task_user.task_id', '=', 'tasks.id')
+                ->where('tasks.project_id', $project->id)
+                ->whereIn('tasks.project_team_id', $teamIds)
+                ->whereNull('tasks.deleted_at')
+                ->select(
+                    'tasks.project_team_id',
+                    'task_user.user_id',
+                    DB::raw('COUNT(tasks.id) as assigned_count'),
+                    DB::raw("COUNT(CASE WHEN tasks.status = '".TaskStatus::COMPLETED->value."' THEN 1 END) as completed_count")
+                )
+                ->groupBy('tasks.project_team_id', 'task_user.user_id')
+                ->get()
+                ->groupBy('project_team_id');
+
+            foreach ($teams as $team) {
+                $metricsForTeam = $memberMetrics->get($team->id, collect())->keyBy('user_id');
+
+                foreach ($team->members as $member) {
+                    $metric = $metricsForTeam->get($member->id);
+                    $member->setAttribute('assigned_tasks_count', (int) ($metric?->assigned_count ?? 0));
+                    $member->setAttribute('completed_tasks_count', (int) ($metric?->completed_count ?? 0));
+                }
+            }
+        }
+
+        return $teams;
     }
 
     /**

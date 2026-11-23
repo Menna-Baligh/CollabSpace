@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Projects;
 
+use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Projects\StoreProjectRequest;
 use App\Http\Requests\Projects\UpdateProjectRequest;
@@ -79,6 +80,13 @@ class ProjectController extends Controller
     public function show(Request $request, Project $project, ProjectService $service): JsonResponse
     {
         $teamId = $request->query('team_id') ? (int) $request->query('team_id') : null;
+
+        $project->loadCount([
+            'tasks as total_tasks',
+            'tasks as pending_tasks' => fn ($q) => $q->where('status', TaskStatus::TODO->value),
+            'tasks as in_progress_tasks' => fn ($q) => $q->whereIn('status', [TaskStatus::IN_PROGRESS->value, TaskStatus::IN_REVIEW->value]),
+            'tasks as completed_tasks' => fn ($q) => $q->where('status', TaskStatus::COMPLETED->value),
+        ]);
 
         try {
             $members = $service->getProjectMembers($project, $teamId);
