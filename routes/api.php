@@ -16,5 +16,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         require __DIR__.'/api/v1/users.php';
         require __DIR__.'/api/v1/profile.php';
         require __DIR__.'/api/v1/reports.php';
+        require __DIR__.'/api/v1/chats.php';
+        require __DIR__.'/api/v1/meetings.php';
     });
 });
