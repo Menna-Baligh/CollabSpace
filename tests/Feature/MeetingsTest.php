@@ -188,11 +188,11 @@ test('transcription and summarization pipeline runs successfully with configured
     Storage::fake('local');
     Storage::disk('local')->put('fake_recording.mp4', 'fake-audio-content');
 
-    config(['services.openai.key' => 'test-openai-key']);
+    config(['services.groq.api_key' => 'test-groq-key']);
     config(['services.gemini.api_key' => 'test-gemini-key']);
 
     Http::fake([
-        'api.openai.com/*' => Http::response([
+        'api.groq.com/*' => Http::response([
             'language' => 'en',
             'text' => 'Welcome everyone to the meeting.',
             'segments' => [
@@ -266,7 +266,7 @@ test('transcription and summarization pipeline runs successfully with configured
 
 test('missing ai credentials fail transcription and summarization jobs cleanly', function () {
     Storage::fake('local');
-    config(['services.openai.key' => null]);
+    config(['services.groq.api_key' => null]);
     config(['services.gemini.api_key' => null]);
 
     $meeting = Meeting::create([

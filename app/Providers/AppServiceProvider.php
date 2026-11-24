@@ -7,7 +7,7 @@ use App\Contracts\TranscriptionServiceInterface;
 use App\Models\ChatThreadReply;
 use App\Policies\ChatThreadPolicy;
 use App\Services\GeminiSummarizerService;
-use App\Services\WhisperTranscriptionService;
+use App\Services\GroqTranscriptionService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -22,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(TranscriptionServiceInterface::class, WhisperTranscriptionService::class);
+        $this->app->bind(TranscriptionServiceInterface::class, GroqTranscriptionService::class);
         $this->app->bind(AiSummarizerServiceInterface::class, GeminiSummarizerService::class);
     }
 
