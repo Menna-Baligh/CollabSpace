@@ -47,4 +47,36 @@ return [
         'reset_password_url' => env('FRONTEND_RESET_PASSWORD_URL', env('FRONTEND_URL', 'http://localhost:3000').'/reset-password'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Jitsi Meet
+    |--------------------------------------------------------------------------
+    | JITSI_DOMAIN: The Jitsi server domain (default: public meet.jit.si).
+    | JITSI_APP_ID / JITSI_SECRET: Required only for JWT-secured self-hosted
+    | or JaaS (8x8.vc) deployments.
+    */
+    'jitsi' => [
+        'domain' => env('JITSI_DOMAIN', 'meet.jit.si'),
+        'app_id' => env('JITSI_APP_ID'),
+        'secret' => env('JITSI_SECRET'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | OpenAI (Whisper Speech-to-Text)
+    |--------------------------------------------------------------------------
+    */
+    'openai' => [
+        'key' => env('OPENAI_API_KEY'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Google Gemini (AI Summarization)
+    |--------------------------------------------------------------------------
+    */
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+    ],
+
 ];
