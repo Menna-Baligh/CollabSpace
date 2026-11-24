@@ -1,0 +1,360 @@
+{
+  "info": {
+    "_postman_id": "collab-chats-module",
+    "name": "07 - Chats Module",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "base_url", "value": "http://localhost:8000"},
+    {"key": "token",    "value": ""}
+  ],
+  "item": [
+    {
+      "name": "Conversations",
+      "item": [
+        {
+          "name": "List Conversations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Accept",          "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization",   "value": "Bearer {{token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/conversations?search=&type=",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","conversations"],
+              "query": [
+                {"key": "search", "value": "", "description": "Filter by name / user name"},
+                {"key": "type",   "value": "", "description": "direct|project_channel|team_channel"}
+              ]
+            },
+            "description": "List the authenticated user's conversations ordered by latest activity."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"data\":[{\"id\":1,\"type\":\"direct\",\"name\":null,\"participants\":[{\"id\":2,\"name\":\"Alice\"}],\"unread_count\":3,\"last_message_at\":\"2026-11-24T18:00:00+00:00\"}],\"meta\":{}}"
+            }
+          ]
+        },
+        {
+          "name": "Start Direct Conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Accept",          "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization",   "value": "Bearer {{token}}"},
+              {"key": "Content-Type",    "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"user_id\": 2}"
+            },
+            "url": {"raw": "{{base_url}}/api/v1/conversations/direct", "host": ["{{base_url}}"], "path": ["api","v1","conversations","direct"]}
+          }
+        },
+        {
+          "name": "Create Project Channel",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Accept",          "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization",   "value": "Bearer {{token}}"},
+              {"key": "Content-Type",    "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"project_id\": 1, \"name\": \"#general\", \"description\": \"Project announcements\"}"
+            },
+            "url": {"raw": "{{base_url}}/api/v1/conversations/project-channel", "host": ["{{base_url}}"], "path": ["api","v1","conversations","project-channel"]}
+          }
+        },
+        {
+          "name": "Create Team Channel",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Accept",          "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization",   "value": "Bearer {{token}}"},
+              {"key": "Content-Type",    "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"team_id\": 1, \"name\": \"#frontend\", \"description\": \"Frontend team channel\"}"
+            },
+            "url": {"raw": "{{base_url}}/api/v1/conversations/team-channel", "host": ["{{base_url}}"], "path": ["api","v1","conversations","team-channel"]}
+          }
+        },
+        {
+          "name": "Get Conversation Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": {"raw": "{{base_url}}/api/v1/conversations/1", "host": ["{{base_url}}"], "path": ["api","v1","conversations","1"]}
+          }
+        },
+        {
+          "name": "Get Conversation Participants",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": {"raw": "{{base_url}}/api/v1/conversations/1/participants", "host": ["{{base_url}}"], "path": ["api","v1","conversations","1","participants"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "List Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/conversations/1/messages?per_page=25&search=",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","conversations","1","messages"],
+              "query": [
+                {"key": "per_page", "value": "25"},
+                {"key": "search",   "value": ""}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {"key": "body",          "value": "Hello team!", "type": "text"},
+                {"key": "attachments[]", "type": "file",         "src": "/path/to/file.pdf", "disabled": true}
+              ]
+            },
+            "url": {"raw": "{{base_url}}/api/v1/conversations/1/messages", "host": ["{{base_url}}"], "path": ["api","v1","conversations","1","messages"]}
+          }
+        },
+        {
+          "name": "Edit Message",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Accept",       "value": "application/json"},
+              {"key": "Authorization","value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {"mode": "raw", "raw": "{\"body\": \"Updated message text\"}"},
+            "url": {"raw": "{{base_url}}/api/v1/conversations/1/messages/5", "host": ["{{base_url}}"], "path": ["api","v1","conversations","1","messages","5"]}
+          }
+        },
+        {
+          "name": "Delete Message",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": {"raw": "{{base_url}}/api/v1/conversations/1/messages/5", "host": ["{{base_url}}"], "path": ["api","v1","conversations","1","messages","5"]}
+          }
+        },
+        {
+          "name": "Mark Conversation as Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {"mode": "raw", "raw": "{\"last_read_message_id\": 42}"},
+            "url": {"raw": "{{base_url}}/api/v1/conversations/1/read", "host": ["{{base_url}}"], "path": ["api","v1","conversations","1","read"]}
+          }
+        },
+        {
+          "name": "Send Typing Indicator",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {"mode": "raw", "raw": "{\"is_typing\": true}"},
+            "url": {"raw": "{{base_url}}/api/v1/conversations/1/typing", "host": ["{{base_url}}"], "path": ["api","v1","conversations","1","typing"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Threads",
+      "item": [
+        {
+          "name": "List Threads in Conversation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": {"raw": "{{base_url}}/api/v1/conversations/1/threads", "host": ["{{base_url}}"], "path": ["api","v1","conversations","1","threads"]}
+          }
+        },
+        {
+          "name": "Create Thread",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {"mode": "raw", "raw": "{\"parent_message_id\": 1, \"title\": \"Sprint planning thread\"}"},
+            "url": {"raw": "{{base_url}}/api/v1/conversations/1/threads", "host": ["{{base_url}}"], "path": ["api","v1","conversations","1","threads"]}
+          }
+        },
+        {
+          "name": "Get Thread Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": {"raw": "{{base_url}}/api/v1/threads/1", "host": ["{{base_url}}"], "path": ["api","v1","threads","1"]}
+          }
+        },
+        {
+          "name": "List Thread Replies",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": {"raw": "{{base_url}}/api/v1/threads/1/replies?per_page=25", "host": ["{{base_url}}"], "path": ["api","v1","threads","1","replies"]}
+          }
+        },
+        {
+          "name": "Add Thread Reply",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {"key": "body", "value": "This is a thread reply.", "type": "text"}
+              ]
+            },
+            "url": {"raw": "{{base_url}}/api/v1/threads/1/replies", "host": ["{{base_url}}"], "path": ["api","v1","threads","1","replies"]}
+          }
+        },
+        {
+          "name": "Edit Thread Reply",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {"mode": "raw", "raw": "{\"body\": \"Updated thread reply.\"}"},
+            "url": {"raw": "{{base_url}}/api/v1/threads/1/replies/1", "host": ["{{base_url}}"], "path": ["api","v1","threads","1","replies","1"]}
+          }
+        },
+        {
+          "name": "Delete Thread Reply",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": {"raw": "{{base_url}}/api/v1/threads/1/replies/1", "host": ["{{base_url}}"], "path": ["api","v1","threads","1","replies","1"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attachments",
+      "item": [
+        {
+          "name": "Download Attachment",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": {"raw": "{{base_url}}/api/v1/chat-attachments/1/download", "host": ["{{base_url}}"], "path": ["api","v1","chat-attachments","1","download"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calls",
+      "item": [
+        {
+          "name": "Initiate Call",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {"mode": "raw", "raw": "{\"type\": \"video\"}"},
+            "url": {"raw": "{{base_url}}/api/v1/conversations/1/calls", "host": ["{{base_url}}"], "path": ["api","v1","conversations","1","calls"]}
+          }
+        },
+        {
+          "name": "Join Call",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": {"raw": "{{base_url}}/api/v1/calls/1/join", "host": ["{{base_url}}"], "path": ["api","v1","calls","1","join"]}
+          }
+        },
+        {
+          "name": "End Call",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": {"raw": "{{base_url}}/api/v1/calls/1/end", "host": ["{{base_url}}"], "path": ["api","v1","calls","1","end"]}
+          }
+        }
+      ]
+    }
+  ]
+}
