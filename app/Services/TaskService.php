@@ -7,9 +7,11 @@ use App\Enums\TaskStatus;
 use App\Models\Project;
 use App\Models\ProjectTeam;
 use App\Models\Task;
+use App\Models\TaskStatusHistory;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -133,6 +135,8 @@ class TaskService
                 $task->assignees()->sync($uniqueAssignees);
             }
 
+            $this->recordStatusTransition($task, null, $status, $creator->id);
+
             return $task->load([
                 'project:id,name',
                 'reviewer:id,name',
@@ -156,6 +160,7 @@ class TaskService
         $this->validateRelationsInProject($task->project, $data);
 
         return DB::transaction(function () use ($task, $data) {
+            $oldStatus = $task->status->value;
             $updateAttributes = [];
 
             if (array_key_exists('title', $data)) {
@@ -206,6 +211,10 @@ class TaskService
                 $task->assignees()->sync($assigneeIds);
             }
 
+            if ($task->wasChanged('status')) {
+                $this->recordStatusTransition($task, $oldStatus, $task->status->value, Auth::id());
+            }
+
             return $task->fresh([
                 'project:id,name',
                 'reviewer:id,name',
@@ -227,6 +236,7 @@ class TaskService
         }
 
         return DB::transaction(function () use ($task, $data) {
+            $oldStatus = $task->status->value;
             $newStatus = $data['status'];
             $updateAttributes = ['status' => $newStatus];
 
@@ -241,6 +251,10 @@ class TaskService
             }
 
             $task->update($updateAttributes);
+
+            if ($task->wasChanged('status')) {
+                $this->recordStatusTransition($task, $oldStatus, $task->status->value, Auth::id());
+            }
 
             return $task->fresh([
                 'project:id,name',
@@ -375,5 +389,24 @@ class TaskService
                 }
             }
         }
+    }
+
+    /**
+     * Record a task status transition if the status actually changed.
+     */
+    protected function recordStatusTransition(Task $task, ?string $fromStatus, string $toStatus, ?int $changedBy = null): void
+    {
+        if ($fromStatus === $toStatus) {
+            return;
+        }
+
+        TaskStatusHistory::create([
+            'task_id' => $task->id,
+            'from_status' => $fromStatus,
+            'to_status' => $toStatus,
+            'changed_by' => $changedBy,
+            'is_baseline' => false,
+            'changed_at' => now(),
+        ]);
     }
 }
