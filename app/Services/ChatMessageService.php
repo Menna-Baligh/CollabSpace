@@ -10,6 +10,8 @@ use App\Models\ChatAttachment;
 use App\Models\ChatMessage;
 use App\Models\Conversation;
 use App\Models\User;
+use App\Notifications\Chats\NewChannelMessageNotification;
+use App\Notifications\Chats\NewDirectMessageNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -100,6 +102,24 @@ class ChatMessageService
             broadcast(new MessageSent($message))->toOthers();
         } catch (Throwable) {
             // Log/ignore failed broadcasting so persisted message is not lost
+        }
+
+        // Notify participants who have not already read up to this message (and exclude sender)
+        $participants = $conversation->participants()
+            ->where('users.id', '!=', $sender->id)
+            ->get();
+
+        foreach ($participants as $participant) {
+            $lastReadId = (int) ($participant->pivot->last_read_message_id ?? 0);
+            if ($lastReadId >= $message->id) {
+                continue;
+            }
+
+            if ($conversation->isDirect()) {
+                $participant->notify(new NewDirectMessageNotification($participant, $message, $conversation, $sender));
+            } else {
+                $participant->notify(new NewChannelMessageNotification($participant, $message, $conversation, $sender));
+            }
         }
 
         return $message;

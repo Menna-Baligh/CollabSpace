@@ -8,6 +8,7 @@ use App\Models\ChatMessage;
 use App\Models\ChatMessageThread;
 use App\Models\ChatThreadReply;
 use App\Models\User;
+use App\Notifications\Chats\ThreadReplyNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -108,6 +109,19 @@ class ChatThreadService
         try {
             broadcast(new ThreadReplySent($reply))->toOthers();
         } catch (Throwable) {
+        }
+
+        // Notify thread creator and parent message sender (excluding current reply sender)
+        $recipientIds = collect([$thread->created_by, $thread->parentMessage?->sender_id])
+            ->filter()
+            ->unique()
+            ->reject(fn ($id) => (int) $id === (int) $sender->id);
+
+        if ($recipientIds->isNotEmpty()) {
+            $recipients = User::whereIn('id', $recipientIds)->get();
+            foreach ($recipients as $recipient) {
+                $recipient->notify(new ThreadReplyNotification($recipient, $reply, $thread, $sender));
+            }
         }
 
         return $reply;
