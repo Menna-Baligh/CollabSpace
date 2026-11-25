@@ -1,0 +1,225 @@
+{
+  "info": {
+    "name": "10 - Ask AI",
+    "_postman_id": "10-ask-ai-collabspace",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "CollabSpace AI Assistant (Ask AI) endpoints.\n\nSynchronous endpoints: POST /ai/chat (text-only), GET /ai/conversations, GET /ai/conversations/{id}, PATCH /ai/messages/{id}/feedback, POST /ai/messages/{id}/regenerate, DELETE /ai/conversations/{id}.\n\nAsynchronous endpoints: POST /ai/chat (with attachment) — returns 202 with status=processing. Frontend should poll or listen via WebSocket for status update."
+  },
+  "variable": [
+    {"key": "base_url", "value": "http://localhost:8000/api/v1"},
+    {"key": "token", "value": ""},
+    {"key": "conversation_id", "value": ""},
+    {"key": "message_id", "value": ""}
+  ],
+  "item": [
+    {
+      "name": "Conversations",
+      "item": [
+        {
+          "name": "List Conversations",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/ai/conversations",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ]
+          }
+        },
+        {
+          "name": "Get Conversation Details",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/ai/conversations/{{conversation_id}}",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ]
+          }
+        },
+        {
+          "name": "Delete Conversation (Soft Delete)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/ai/conversations/{{conversation_id}}",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "New Conversation - Text (Synchronous)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/ai/chat",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"What tasks are overdue in my projects?\"\n}",
+              "options": {"raw": {"language": "json"}}
+            }
+          }
+        },
+        {
+          "name": "Follow-up Message (Synchronous)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/ai/chat",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversation_id\": {{conversation_id}},\n  \"message\": \"Which team member has the most pending tasks?\"\n}",
+              "options": {"raw": {"language": "json"}}
+            }
+          }
+        },
+        {
+          "name": "General AI Question (Synchronous)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/ai/chat",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Explain Agile methodology in 3 bullet points.\"\n}",
+              "options": {"raw": {"language": "json"}}
+            }
+          }
+        },
+        {
+          "name": "Upload PDF Attachment (Asynchronous - returns 202)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/ai/chat",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {"key": "message", "value": "Please summarize this document.", "type": "text"},
+                {"key": "attachment", "type": "file", "src": "/path/to/document.pdf", "description": "PDF file, max 10MB"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upload Image Attachment (Asynchronous - returns 202)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/ai/chat",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {"key": "message", "value": "What do you see in this image?", "type": "text"},
+                {"key": "attachment", "type": "file", "src": "/path/to/screenshot.png", "description": "Image file (jpg, jpeg, png, gif, webp), max 10MB"}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Regenerate Assistant Response",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/ai/messages/{{message_id}}/regenerate",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ]
+          }
+        },
+        {
+          "name": "Feedback - Like",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/ai/messages/{{message_id}}/feedback",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"feedback\": \"like\"\n}",
+              "options": {"raw": {"language": "json"}}
+            }
+          }
+        },
+        {
+          "name": "Feedback - Dislike",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/ai/messages/{{message_id}}/feedback",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"feedback\": \"dislike\"\n}",
+              "options": {"raw": {"language": "json"}}
+            }
+          }
+        },
+        {
+          "name": "Feedback - Remove (null)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/ai/messages/{{message_id}}/feedback",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"feedback\": null\n}",
+              "options": {"raw": {"language": "json"}}
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

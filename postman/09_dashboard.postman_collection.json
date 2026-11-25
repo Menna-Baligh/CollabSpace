@@ -1,0 +1,132 @@
+{
+  "info": {
+    "name": "09 - Dashboard",
+    "_postman_id": "09-dashboard-collabspace",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "CollabSpace Dashboard and Global Search endpoints"
+  },
+  "variable": [
+    {"key": "base_url", "value": "http://localhost:8000/api/v1"},
+    {"key": "token", "value": ""}
+  ],
+  "item": [
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard (default)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/dashboard",
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ]
+          }
+        },
+        {
+          "name": "Get Dashboard - filter by project + period",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/dashboard?project_id=1&period=this_month",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard"],
+              "query": [
+                {"key": "project_id", "value": "1"},
+                {"key": "period", "value": "this_month"}
+              ]
+            },
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ]
+          }
+        },
+        {
+          "name": "Get Dashboard - filter by team",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/dashboard?team_id=1",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard"],
+              "query": [
+                {"key": "team_id", "value": "1"}
+              ]
+            },
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ]
+          }
+        },
+        {
+          "name": "Get Dashboard - this_week period",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/dashboard?period=this_week",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard"],
+              "query": [
+                {"key": "period", "value": "this_week"}
+              ]
+            },
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Global Search",
+      "item": [
+        {
+          "name": "Search - all types",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/search?q=alpha",
+              "host": ["{{base_url}}"],
+              "path": ["search"],
+              "query": [
+                {"key": "q", "value": "alpha"}
+              ]
+            },
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ]
+          }
+        },
+        {
+          "name": "Search - too short (422)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/search?q=a",
+              "host": ["{{base_url}}"],
+              "path": ["search"],
+              "query": [
+                {"key": "q", "value": "a"}
+              ]
+            },
+            "header": [
+              {"key": "Accept", "value": "application/json"},
+              {"key": "Accept-Language", "value": "en"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
