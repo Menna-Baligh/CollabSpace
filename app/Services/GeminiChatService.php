@@ -114,9 +114,25 @@ class GeminiChatService
             $toolArgs = is_array($functionCall['args'] ?? null) ? $functionCall['args'] : [];
             $toolResult = $this->contextBuilder->executeOperation($user, $toolName, $toolArgs);
 
+            // Strip Gemini-internal fields (thoughtSignature, etc.) from parts before
+            // appending to conversation history — sending them back causes a 400 error.
+            $cleanParts = array_map(function (array $part): array {
+                unset($part['thoughtSignature']);
+
+                // functionCall.args must be a JSON object (stdClass), not an array,
+                // otherwise an empty args {} gets encoded as [] which Gemini rejects.
+                if (isset($part['functionCall']['args']) && is_array($part['functionCall']['args'])) {
+                    $part['functionCall']['args'] = empty($part['functionCall']['args'])
+                        ? new \stdClass
+                        : (object) $part['functionCall']['args'];
+                }
+
+                return $part;
+            }, $parts);
+
             $contents[] = [
                 'role' => 'model',
-                'parts' => $parts,
+                'parts' => $cleanParts,
             ];
             $contents[] = [
                 'role' => 'user',
@@ -124,7 +140,7 @@ class GeminiChatService
                     [
                         'functionResponse' => [
                             'name' => $toolName,
-                            'response' => $toolResult,
+                            'response' => ['result' => $toolResult],
                         ],
                     ],
                 ],
