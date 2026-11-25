@@ -9,6 +9,12 @@ use App\Models\ProjectTeam;
 use App\Models\Task;
 use App\Models\TaskStatusHistory;
 use App\Models\User;
+use App\Notifications\Tasks\TaskAssignedNotification;
+use App\Notifications\Tasks\TaskDueDateChangedNotification;
+use App\Notifications\Tasks\TaskPriorityChangedNotification;
+use App\Notifications\Tasks\TaskReviewerAssignedNotification;
+use App\Notifications\Tasks\TaskStatusChangedNotification;
+use App\Notifications\Tasks\TaskUnassignedNotification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -137,12 +143,26 @@ class TaskService
 
             $this->recordStatusTransition($task, null, $status, $creator->id);
 
-            return $task->load([
+            $loadedTask = $task->load([
                 'project:id,name',
                 'reviewer:id,name',
                 'assignees:id,name',
                 'team:id,name',
             ]);
+
+            DB::afterCommit(function () use ($loadedTask, $creator) {
+                foreach ($loadedTask->assignees as $assignee) {
+                    if ($assignee->id !== $creator->id) {
+                        $assignee->notify(new TaskAssignedNotification($assignee, $loadedTask, $creator));
+                    }
+                }
+
+                if ($loadedTask->reviewer && $loadedTask->reviewer->id !== $creator->id) {
+                    $loadedTask->reviewer->notify(new TaskReviewerAssignedNotification($loadedTask->reviewer, $loadedTask, $creator));
+                }
+            });
+
+            return $loadedTask;
         });
     }
 
@@ -161,6 +181,10 @@ class TaskService
 
         return DB::transaction(function () use ($task, $data) {
             $oldStatus = $task->status->value;
+            $oldPriority = $task->priority?->value ?? '';
+            $oldDueDate = $task->due_date?->format('Y-m-d');
+            $oldReviewerId = $task->reviewer_id;
+            $oldAssigneeIds = $task->assignees()->pluck('users.id')->all();
             $updateAttributes = [];
 
             if (array_key_exists('title', $data)) {
@@ -215,12 +239,71 @@ class TaskService
                 $this->recordStatusTransition($task, $oldStatus, $task->status->value, Auth::id());
             }
 
-            return $task->fresh([
+            $freshTask = $task->fresh([
                 'project:id,name',
                 'reviewer:id,name',
                 'assignees:id,name',
                 'team:id,name',
             ]);
+
+            $actor = Auth::user();
+
+            DB::afterCommit(function () use ($freshTask, $oldStatus, $oldPriority, $oldDueDate, $oldReviewerId, $oldAssigneeIds, $actor) {
+                $actorId = $actor?->id;
+
+                if ($freshTask->wasChanged('status') && $actor) {
+                    $recipients = $freshTask->assignees->push($freshTask->reviewer)->push($freshTask->creator)->filter()->unique('id');
+                    foreach ($recipients as $recipient) {
+                        if ($recipient->id !== $actorId) {
+                            $recipient->notify(new TaskStatusChangedNotification($recipient, $freshTask, $oldStatus, $freshTask->status->value, $actor));
+                        }
+                    }
+                }
+
+                if ($freshTask->wasChanged('priority')) {
+                    foreach ($freshTask->assignees as $assignee) {
+                        if ($assignee->id !== $actorId) {
+                            $assignee->notify(new TaskPriorityChangedNotification($assignee, $freshTask, $oldPriority, $freshTask->priority->value));
+                        }
+                    }
+                }
+
+                if ($freshTask->wasChanged('due_date')) {
+                    $newDueDate = $freshTask->due_date?->format('Y-m-d');
+                    foreach ($freshTask->assignees as $assignee) {
+                        if ($assignee->id !== $actorId) {
+                            $assignee->notify(new TaskDueDateChangedNotification($assignee, $freshTask, $oldDueDate, $newDueDate));
+                        }
+                    }
+                }
+
+                if ($freshTask->reviewer_id && $freshTask->reviewer_id !== $oldReviewerId && $freshTask->reviewer_id !== $actorId && $actor) {
+                    $freshTask->reviewer?->notify(new TaskReviewerAssignedNotification($freshTask->reviewer, $freshTask, $actor));
+                }
+
+                $newAssigneeIds = $freshTask->assignees->pluck('id')->all();
+                $addedIds = array_diff($newAssigneeIds, $oldAssigneeIds);
+                $removedIds = array_diff($oldAssigneeIds, $newAssigneeIds);
+
+                if (! empty($addedIds) && $actor) {
+                    foreach ($freshTask->assignees->whereIn('id', $addedIds) as $added) {
+                        if ($added->id !== $actorId) {
+                            $added->notify(new TaskAssignedNotification($added, $freshTask, $actor));
+                        }
+                    }
+                }
+
+                if (! empty($removedIds)) {
+                    $removedUsers = User::whereIn('id', $removedIds)->get();
+                    foreach ($removedUsers as $removed) {
+                        if ($removed->id !== $actorId) {
+                            $removed->notify(new TaskUnassignedNotification($removed, $freshTask));
+                        }
+                    }
+                }
+            });
+
+            return $freshTask;
         });
     }
 
@@ -237,6 +320,10 @@ class TaskService
 
         return DB::transaction(function () use ($task, $data) {
             $oldStatus = $task->status->value;
+            $oldPriority = $task->priority?->value ?? '';
+            $oldDueDate = $task->due_date?->format('Y-m-d');
+            $oldReviewerId = $task->reviewer_id;
+            $oldAssigneeIds = $task->assignees()->pluck('users.id')->all();
             $newStatus = $data['status'];
             $updateAttributes = ['status' => $newStatus];
 
@@ -256,12 +343,71 @@ class TaskService
                 $this->recordStatusTransition($task, $oldStatus, $task->status->value, Auth::id());
             }
 
-            return $task->fresh([
+            $freshTask = $task->fresh([
                 'project:id,name',
                 'reviewer:id,name',
                 'assignees:id,name',
                 'team:id,name',
             ]);
+
+            $actor = Auth::user();
+
+            DB::afterCommit(function () use ($freshTask, $oldStatus, $oldPriority, $oldDueDate, $oldReviewerId, $oldAssigneeIds, $actor) {
+                $actorId = $actor?->id;
+
+                if ($freshTask->wasChanged('status') && $actor) {
+                    $recipients = $freshTask->assignees->push($freshTask->reviewer)->push($freshTask->creator)->filter()->unique('id');
+                    foreach ($recipients as $recipient) {
+                        if ($recipient->id !== $actorId) {
+                            $recipient->notify(new TaskStatusChangedNotification($recipient, $freshTask, $oldStatus, $freshTask->status->value, $actor));
+                        }
+                    }
+                }
+
+                if ($freshTask->wasChanged('priority')) {
+                    foreach ($freshTask->assignees as $assignee) {
+                        if ($assignee->id !== $actorId) {
+                            $assignee->notify(new TaskPriorityChangedNotification($assignee, $freshTask, $oldPriority, $freshTask->priority->value));
+                        }
+                    }
+                }
+
+                if ($freshTask->wasChanged('due_date')) {
+                    $newDueDate = $freshTask->due_date?->format('Y-m-d');
+                    foreach ($freshTask->assignees as $assignee) {
+                        if ($assignee->id !== $actorId) {
+                            $assignee->notify(new TaskDueDateChangedNotification($assignee, $freshTask, $oldDueDate, $newDueDate));
+                        }
+                    }
+                }
+
+                if ($freshTask->reviewer_id && $freshTask->reviewer_id !== $oldReviewerId && $freshTask->reviewer_id !== $actorId && $actor) {
+                    $freshTask->reviewer?->notify(new TaskReviewerAssignedNotification($freshTask->reviewer, $freshTask, $actor));
+                }
+
+                $newAssigneeIds = $freshTask->assignees->pluck('id')->all();
+                $addedIds = array_diff($newAssigneeIds, $oldAssigneeIds);
+                $removedIds = array_diff($oldAssigneeIds, $newAssigneeIds);
+
+                if (! empty($addedIds) && $actor) {
+                    foreach ($freshTask->assignees->whereIn('id', $addedIds) as $added) {
+                        if ($added->id !== $actorId) {
+                            $added->notify(new TaskAssignedNotification($added, $freshTask, $actor));
+                        }
+                    }
+                }
+
+                if (! empty($removedIds)) {
+                    $removedUsers = User::whereIn('id', $removedIds)->get();
+                    foreach ($removedUsers as $removed) {
+                        if ($removed->id !== $actorId) {
+                            $removed->notify(new TaskUnassignedNotification($removed, $freshTask));
+                        }
+                    }
+                }
+            });
+
+            return $freshTask;
         });
     }
 
