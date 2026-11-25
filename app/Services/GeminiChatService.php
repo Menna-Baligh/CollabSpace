@@ -62,6 +62,10 @@ class GeminiChatService
                 ]);
 
             if ($response->failed()) {
+                \Illuminate\Support\Facades\Log::warning('Gemini API HTTP error', [
+                    'status' => $response->status(),
+                    'body' => substr($response->body(), 0, 500),
+                ]);
                 throw new RuntimeException(__('ai.provider_error'));
             }
 
