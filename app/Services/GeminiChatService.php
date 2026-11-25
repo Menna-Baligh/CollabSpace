@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class GeminiChatService
@@ -62,7 +63,7 @@ class GeminiChatService
                 ]);
 
             if ($response->failed()) {
-                \Illuminate\Support\Facades\Log::warning('Gemini API HTTP error', [
+                Log::warning('Gemini API HTTP error', [
                     'status' => $response->status(),
                     'body' => substr($response->body(), 0, 500),
                 ]);
