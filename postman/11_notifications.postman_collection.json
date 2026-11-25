@@ -1,0 +1,108 @@
+{
+  "info": {
+    "_postman_id": "11-notifications-collabspace",
+    "name": "11. Notifications",
+    "description": "CollabSpace Notifications Module API endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "List Notifications",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/notifications?filter=all&per_page=20",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "notifications"],
+          "query": [
+            { "key": "filter", "value": "all" },
+            { "key": "per_page", "value": "20" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Unread Count",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/notifications/unread-count",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "notifications", "unread-count"]
+        }
+      }
+    },
+    {
+      "name": "Mark Notification as Read",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/notifications/{{notification_id}}/read",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "notifications", "{{notification_id}}", "read"]
+        }
+      }
+    },
+    {
+      "name": "Mark All Notifications as Read",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/notifications/read-all",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "notifications", "read-all"]
+        }
+      }
+    },
+    {
+      "name": "Delete Notification",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/notifications/{{notification_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "notifications", "{{notification_id}}"]
+        }
+      }
+    },
+    {
+      "name": "Delete All Notifications",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/notifications",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "notifications"]
+        }
+      }
+    }
+  ]
+}
