@@ -6,6 +6,10 @@ use App\Enums\ProjectRole;
 use App\Models\Project;
 use App\Models\ProjectTeam;
 use App\Models\User;
+use App\Notifications\Projects\ProjectManagerAssignedNotification;
+use App\Notifications\Projects\ProjectMemberAddedNotification;
+use App\Notifications\Projects\ProjectMemberRemovedNotification;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -37,6 +41,10 @@ class ProjectMemberService
         $project->members()->attach($user->id, [
             'role' => $role,
         ]);
+
+        if (Auth::id() !== $user->id) {
+            $user->notify(new ProjectMemberAddedNotification($user, $project, $role));
+        }
 
         return $project->members()->where('users.id', $user->id)->first();
     }
@@ -86,7 +94,18 @@ class ProjectMemberService
                     'updated_at' => now(),
                 ]);
 
-            return $project->members()->where('users.id', $userId)->first();
+            $updatedUser = $project->members()->where('users.id', $userId)->first();
+
+            if (
+                $updatedUser
+                && $membership->role !== ProjectRole::PROJECT_MANAGER->value
+                && $newRole === ProjectRole::PROJECT_MANAGER->value
+                && Auth::id() !== $userId
+            ) {
+                DB::afterCommit(fn () => $updatedUser->notify(new ProjectManagerAssignedNotification($updatedUser, $project)));
+            }
+
+            return $updatedUser;
         });
     }
 
@@ -146,6 +165,13 @@ class ProjectMemberService
                 ->where('project_id', $project->id)
                 ->where('user_id', $userId)
                 ->delete();
+
+            if (Auth::id() !== $userId) {
+                $removedUser = User::find($userId);
+                if ($removedUser) {
+                    DB::afterCommit(fn () => $removedUser->notify(new ProjectMemberRemovedNotification($removedUser, $project)));
+                }
+            }
         });
     }
 }

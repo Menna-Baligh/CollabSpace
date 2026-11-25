@@ -6,7 +6,11 @@ use App\Enums\TaskStatus;
 use App\Models\Project;
 use App\Models\ProjectTeam;
 use App\Models\User;
+use App\Notifications\Teams\TeamLeaderAssignedNotification;
+use App\Notifications\Teams\TeamMemberAddedNotification;
+use App\Notifications\Teams\TeamMemberRemovedNotification;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -96,6 +100,13 @@ class ProjectTeamService
                 $team->members()->attach($leaderId, [
                     'role_title' => $data['leader_role_title'] ?? null,
                 ]);
+
+                if (Auth::id() !== $leaderId) {
+                    $leader = User::find($leaderId);
+                    if ($leader) {
+                        DB::afterCommit(fn () => $leader->notify(new TeamLeaderAssignedNotification($leader, $team, $project)));
+                    }
+                }
             }
 
             return $team->load(['leader', 'members']);
@@ -115,6 +126,8 @@ class ProjectTeamService
         }
 
         return DB::transaction(function () use ($project, $team, $data) {
+            $oldLeaderId = $team->leader_id;
+
             if (array_key_exists('leader_id', $data)) {
                 $newLeaderId = ! empty($data['leader_id']) ? (int) $data['leader_id'] : null;
 
@@ -149,6 +162,13 @@ class ProjectTeamService
             }
 
             $team->save();
+
+            if ($team->leader_id && $team->leader_id !== $oldLeaderId && Auth::id() !== $team->leader_id) {
+                $newLeader = User::find($team->leader_id);
+                if ($newLeader) {
+                    DB::afterCommit(fn () => $newLeader->notify(new TeamLeaderAssignedNotification($newLeader, $team, $project)));
+                }
+            }
 
             return $team->fresh(['leader', 'members']);
         });
@@ -189,7 +209,13 @@ class ProjectTeamService
             'role_title' => $roleTitle,
         ]);
 
-        return $team->members()->where('users.id', $userId)->first();
+        $member = $team->members()->where('users.id', $userId)->first();
+
+        if ($member && Auth::id() !== $userId) {
+            $member->notify(new TeamMemberAddedNotification($member, $team, $project));
+        }
+
+        return $member;
     }
 
     /**
@@ -207,12 +233,19 @@ class ProjectTeamService
             throw new InvalidArgumentException(__('projects.team_member_not_found'));
         }
 
-        DB::transaction(function () use ($team, $userId) {
+        DB::transaction(function () use ($project, $team, $userId) {
             if ((int) $team->leader_id === (int) $userId) {
                 $team->update(['leader_id' => null]);
             }
 
             $team->members()->detach($userId);
+
+            if (Auth::id() !== $userId) {
+                $removedUser = User::find($userId);
+                if ($removedUser) {
+                    DB::afterCommit(fn () => $removedUser->notify(new TeamMemberRemovedNotification($removedUser, $team, $project)));
+                }
+            }
         });
     }
 }
