@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use App\Contracts\AiSummarizerServiceInterface;
 use App\Contracts\TranscriptionServiceInterface;
+use App\Models\AiConversation;
 use App\Models\ChatThreadReply;
+use App\Policies\AiConversationPolicy;
 use App\Policies\ChatThreadPolicy;
 use App\Services\GeminiSummarizerService;
 use App\Services\GroqTranscriptionService;
@@ -34,6 +36,22 @@ class AppServiceProvider extends ServiceProvider
         Model::preventLazyLoading(! $this->app->isProduction());
 
         Gate::policy(ChatThreadReply::class, ChatThreadPolicy::class);
+        Gate::policy(AiConversation::class, AiConversationPolicy::class);
+
+        RateLimiter::for('ai-chat', function (Request $request) {
+            return Limit::perMinute(config('services.rate_limits.ai_chat', 30))
+                ->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('ai-attachments', function (Request $request) {
+            return Limit::perMinute(config('services.rate_limits.ai_attachments', 10))
+                ->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('ai-regenerate', function (Request $request) {
+            return Limit::perMinute(config('services.rate_limits.ai_regenerate', 10))
+                ->by($request->user()?->id ?: $request->ip());
+        });
 
         RateLimiter::for('chat-messages', function (Request $request) {
             return Limit::perMinute(config('services.rate_limits.chat_messages', 60))
