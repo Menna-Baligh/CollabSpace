@@ -6,8 +6,12 @@ use App\Enums\MeetingParticipantStatus;
 use App\Enums\MeetingStatus;
 use App\Models\Meeting;
 use App\Models\User;
+use App\Notifications\Meetings\MeetingCancelledNotification;
+use App\Notifications\Meetings\MeetingScheduledNotification;
+use App\Notifications\Meetings\MeetingUpdatedNotification;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -93,7 +97,17 @@ class MeetingService
                 }
             }
 
-            return $meeting->load(['project', 'creator', 'participants']);
+            $loadedMeeting = $meeting->load(['project', 'creator', 'participants']);
+
+            DB::afterCommit(function () use ($loadedMeeting, $creator) {
+                foreach ($loadedMeeting->participants as $participant) {
+                    if ($participant->id !== $creator->id) {
+                        $participant->notify(new MeetingScheduledNotification($participant, $loadedMeeting, $creator));
+                    }
+                }
+            });
+
+            return $loadedMeeting;
         });
     }
 
@@ -116,7 +130,16 @@ class MeetingService
 
         $meeting->update($data);
 
-        return $meeting->load(['project', 'creator', 'participants']);
+        $loadedMeeting = $meeting->load(['project', 'creator', 'participants']);
+        $actorId = Auth::id();
+
+        foreach ($loadedMeeting->participants as $participant) {
+            if ($participant->id !== $actorId) {
+                $participant->notify(new MeetingUpdatedNotification($participant, $loadedMeeting));
+            }
+        }
+
+        return $loadedMeeting;
     }
 
     /**
@@ -125,6 +148,13 @@ class MeetingService
     public function cancelMeeting(Meeting $meeting): Meeting
     {
         $meeting->update(['status' => MeetingStatus::CANCELLED]);
+
+        $actorId = Auth::id();
+        foreach ($meeting->participants as $participant) {
+            if ($participant->id !== $actorId) {
+                $participant->notify(new MeetingCancelledNotification($participant, $meeting));
+            }
+        }
 
         return $meeting;
     }

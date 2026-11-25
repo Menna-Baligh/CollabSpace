@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Project;
 use App\Models\ProjectFile;
 use App\Models\User;
+use App\Notifications\Files\ProjectFileUploadedNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
@@ -100,6 +101,13 @@ class ProjectFileService
                     'extension' => $extension,
                     'size_bytes' => $sizeBytes,
                 ]);
+
+                DB::afterCommit(function () use ($project, $file, $uploader) {
+                    $members = $project->members()->where('users.id', '!=', $uploader->id)->get();
+                    foreach ($members as $member) {
+                        $member->notify(new ProjectFileUploadedNotification($member, $file, $project, $uploader));
+                    }
+                });
 
                 return $file->load('uploader:id,name');
             });

@@ -4,6 +4,8 @@ namespace App\Jobs;
 
 use App\Enums\AiMessageStatus;
 use App\Models\AiMessage;
+use App\Notifications\Ai\AiAttachmentProcessingCompletedNotification;
+use App\Notifications\Ai\AiAttachmentProcessingFailedNotification;
 use App\Services\AiChatService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -49,7 +51,18 @@ class ProcessAiAttachmentJob implements ShouldQueue
         $service->processAttachmentMessage($this->userMessage, $this->assistantMessage);
 
         // Broadcast event if it exists
-        $this->broadcastUpdate($this->assistantMessage->fresh());
+        $fresh = $this->assistantMessage->fresh();
+        $this->broadcastUpdate($fresh);
+
+        $conversation = $this->userMessage->conversation;
+        $user = $conversation?->user;
+        if ($user && $conversation) {
+            if ($fresh?->status === AiMessageStatus::COMPLETED) {
+                $user->notify(new AiAttachmentProcessingCompletedNotification($user, $this->userMessage, $conversation));
+            } elseif ($fresh?->status === AiMessageStatus::FAILED) {
+                $user->notify(new AiAttachmentProcessingFailedNotification($user, $this->userMessage, $conversation));
+            }
+        }
     }
 
     public function failed(Throwable $e): void
@@ -61,6 +74,12 @@ class ProcessAiAttachmentJob implements ShouldQueue
             ]);
 
             $this->broadcastUpdate($this->assistantMessage->fresh());
+
+            $conversation = $this->userMessage->conversation;
+            $user = $conversation?->user;
+            if ($user && $conversation) {
+                $user->notify(new AiAttachmentProcessingFailedNotification($user, $this->userMessage, $conversation));
+            }
         } catch (Throwable $inner) {
             // Ignore secondary failures
         }
