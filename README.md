@@ -99,6 +99,9 @@ php artisan storage:link
 php artisan serve
 ```
 
+Once running, the interactive API documentation is available at:
+`http://localhost:8000/docs/api`
+
 ### Background Workers, Scheduler &amp; Real-Time (Optional / As Needed)
 
 ```bash
